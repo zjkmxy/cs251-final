@@ -1,0 +1,3 @@
+[submodule "riscv-v-spec"]
+	path = riscv-v-spec
+	url = https://github.com/riscv/riscv-v-spec
