@@ -26,8 +26,8 @@ riscv64-unknown-elf-objdump -D <PROGRAM> > <DISASM.dasm>
 It will contain codes of pk (proxy kernel).
 If you want to intermix source code with disassembly, use `-S` instead of `-D`.
 
-Compile to assembly codes and link
-----------------------------------
+Compile C files to assembly codes and link
+------------------------------------------
 ```bash
 riscv64-unknown-elf-gcc -S <SOURCE.c> -o <SOURCE.s>
 riscv64-unknown-elf-gcc <SOURCE.s> -o <PROGRAM>
@@ -44,4 +44,10 @@ riscv64-unknown-elf-ld /opt/riscv/riscv64-unknown-elf/lib/crt0.o /opt/riscv/lib/
 ```
 We can define our own link script `link.ld` and get rid of newlib.
 
+Compile assembly codes without newlib
+-------------------------------------
+See `Makefile` and `examples/assembly`
 
+Compile assembly and C codes
+----------------------------
+To be done.

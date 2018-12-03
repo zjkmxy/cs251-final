@@ -1,3 +1,6 @@
 [submodule "riscv-v-spec"]
 	path = riscv-v-spec
 	url = https://github.com/riscv/riscv-v-spec
+[submodule "riscv-asm-manual"]
+	path = riscv-asm-manual
+	url = https://github.com/riscv/riscv-asm-manual.git
