@@ -50,4 +50,4 @@ See `Makefile` and `examples/assembly`
 
 Compile assembly and C codes
 ----------------------------
-To be done.
+See `Makefile` and `examples/withc`
