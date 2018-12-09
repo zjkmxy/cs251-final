@@ -3,6 +3,34 @@
 # ===== Text section starts =====
     .section .text;
     .align 2
+vecadd:
+    .globl vecadd
+    # ***********************
+    # brief:
+    #   W[i] = X[i] + Y[i]
+    # input: 
+    #   a0 = N
+    #   a1 = addr of X
+    #   a2 = addr of Y
+    #   a3 = addr of W
+    # output: 
+    #   None
+    # ctype: 
+    #   vecadd (int, int *, int *, int *) -> void
+    # ***********************
+    vsetvli t0, a0, vint32 # t0 <- vector length
+    sub a0, a0, t0 # n <- n - vector to be dealt
+    slli t0, t0, 2 # t0 <- sizeof(int32[t0])
+    vlw.v v0, (a1) # v0 = *x
+    vlw.v v1, (a2) # v1 = *y
+    vadd.vv v2, v0, v1 # v2 = v0 * v1 + v2
+    vsw.v v2, (a3) # *w = v2
+    add a1, a1, t0
+    add a2, a2, t0
+    add a3, a3, t0
+    bne a0, x0, muladd # while (n != 0) 
+    ret
+
 muladd:
     .globl muladd
     # ***********************
