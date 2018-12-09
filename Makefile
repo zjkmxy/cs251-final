@@ -1,4 +1,7 @@
-all: build build/add build/print
+all: build \
+     build/add \
+	 build/print \
+	 build/3mm
 
 build:
 	mkdir -p build
@@ -16,6 +19,18 @@ build/print: examples/withc/print.S \
 	examples/withc/print.S \
 	examples/withc/main.c \
 	-o build/print
+
+build/3mm: examples/3mm/print.S \
+           examples/3mm/start.S \
+           examples/3mm/3mm.c \
+		   examples/3mm/3mm.h \
+		   examples/3mm/config.h
+	riscv64-unknown-elf-gcc -nostdlib -nostartfiles -T./examples/link.ld \
+	-fPIC \
+	examples/3mm/print.S \
+	examples/3mm/start.S \
+	examples/3mm/3mm.c \
+	-o build/3mm -O2
 
 clean:
 	rm -rf build
