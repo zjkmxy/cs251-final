@@ -1645,11 +1645,15 @@ decode QUADRANT default Unknown::unknown() {
             }
             0x15: decode FUNCT7 {
                 0x48: vadd({{
-                    Vd_sv = Vs1_sv + Vs2_sv;
-                }});
+                    for (int i = 0; i < Vs1_sv.size(); ++i) {
+                        Vd_sv[i] = Vs1_sv[i] + Vs2_sv[i];
+                    }
+                }}, FloatCvtOp);
                 0x49: vsub({{
-                    Vd_sv = Vs1_sv - Vs2_sv;
-                }});
+                    for (int i = 0; i < Vs1_sv.size(); ++i) {
+                        Vd_sv[i] = Vs1_sv[i] - Vs2_sv[i];
+                    }
+                }}, FloatCvtOp);
             }
         }
 
