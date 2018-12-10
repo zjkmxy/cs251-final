@@ -77,7 +77,7 @@ typedef struct { float x[8]; } FloatVecReg;
 /* Vector extensions */
 const unsigned NumVecRegs = 32;
 // const unsigned NumVecElemPerVecReg = 2;
-const unsigned NumVecElemPerVecReg = 8;
+const unsigned NumVecElemPerVecReg = 4;
 using VecElem = uint32_t;
 using VecReg = ::VecRegT<VecElem, NumVecElemPerVecReg, false>;
 using ConstVecReg = ::VecRegT<VecElem, NumVecElemPerVecReg, true>;
@@ -266,6 +266,9 @@ enum MiscRegIndex {
     MISCREG_FFLAGS,
     MISCREG_FRM,
 
+    /* Vector CSRs */
+    MISCREG_VL,
+
     NUM_MISCREGS
 };
 const int NumMiscRegs = NUM_MISCREGS;
@@ -431,7 +434,10 @@ enum CSRIndex {
     CSR_TDATA3 = 0x7A3,
     CSR_DCSR = 0x7B0,
     CSR_DPC = 0x7B1,
-    CSR_DSCRATCH = 0x7B2
+    CSR_DSCRATCH = 0x7B2,
+
+    /* Vector CSRs */
+    CSR_VL = 0x400
 };
 
 struct CSRMetadata
@@ -599,7 +605,10 @@ const std::map<int, CSRMetadata> CSRData = {
     {CSR_TDATA3, {"tdata3", MISCREG_TDATA3}},
     {CSR_DCSR, {"dcsr", MISCREG_DCSR}},
     {CSR_DPC, {"dpc", MISCREG_DPC}},
-    {CSR_DSCRATCH, {"dscratch", MISCREG_DSCRATCH}}
+    {CSR_DSCRATCH, {"dscratch", MISCREG_DSCRATCH}},
+
+    /* Vector CSRs */
+    {CSR_VL, {"vl", MISCREG_VL}}
 };
 
 /**

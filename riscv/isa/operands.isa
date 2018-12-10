@@ -83,4 +83,5 @@ def operands {{
 #Program Counter Operands
     'PC': ('PCState', 'ud', 'pc', (None, None, 'IsControl'), 7),
     'NPC': ('PCState', 'ud', 'npc', (None, None, 'IsControl'), 8),
+    'Vl' : ('IntReg', 'ud', None, 'IsControl', 9)
 }};
