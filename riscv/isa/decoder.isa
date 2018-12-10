@@ -405,6 +405,14 @@ decode QUADRANT default Unknown::unknown() {
                 0x3: fld({{
                     Fd_bits = Mem;
                 }}, inst_flags=FloatMemReadOp);
+                0x6: vlw({{
+                    uint64_t Rs1 = xc->readIntRegOperand(this, 0);
+                    Addr EA = Rs1 + offset;
+                    for (int i = 0; i < RiscvISA::NumVecElemPerVecReg; ++i) {
+                        readMemAtomic(xc, traceData, EA + i * 4, Mem_uw, memAccessFlags);
+                        Vd_sv[i] = Mem_uw;
+                    }
+                }}, inst_flags=FloatMemReadOp);
             }
         }
 
@@ -499,6 +507,12 @@ decode QUADRANT default Unknown::unknown() {
                 0x3: fsd({{
                     Mem_ud = Fs2_bits;
                 }}, inst_flags=FloatMemWriteOp);
+                0x6: vsw({{
+                    for (int i = RiscvISA::NumVecElemPerVecReg - 1; i >= 0; --i) {
+                        Mem_uw = Vd_sv[i];
+                        writeMemAtomic(xc, traceData, Mem_uw, EA + i * 4, memAccessFlags, nullptr);
+                    }
+                }});
             }
         }
 
@@ -1647,12 +1661,12 @@ decode QUADRANT default Unknown::unknown() {
         format VVOp{
             0x15: decode FUNCT7 {
                 0x48: vadd({{
-                    for (int i = 0; i < Vs1_sv.size(); ++i) {
+                    for (int i = 0; i < RiscvISA::NumVecElemPerVecReg; ++i) {
                         Vd_sv[i] = Vs1_sv[i] + Vs2_sv[i];
                     }
                 }}, FloatCvtOp);
                 0x49: vsub({{
-                    for (int i = 0; i < Vs1_sv.size(); ++i) {
+                    for (int i = 0; i < RiscvISA::NumVecElemPerVecReg; ++i) {
                         Vd_sv[i] = Vs1_sv[i] - Vs2_sv[i];
                     }
                 }}, FloatCvtOp);

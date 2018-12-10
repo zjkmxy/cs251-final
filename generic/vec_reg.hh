@@ -253,10 +253,6 @@ class VecRegT
      * because casting to reference prevents unnecessary copies.
      */
     operator Container&() { return container; }
-
-    static size_t size() {
-        return NumElems;
-    }
 };
 
 /* Forward declaration. */

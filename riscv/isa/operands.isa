@@ -77,11 +77,13 @@ def operands {{
     'Vs1': ('VecReg', 'sv', 'VS1', 'IsVector', 2),
     'Vs2': ('VecReg', 'sv', 'VS2', 'IsVector', 3),
 
+#Vector CSRs
+    'Vl' : ('IntReg', 'ud', None, 'IsControl', 9),
+
 #Memory Operand
     'Mem': ('Mem', 'ud', None, ('IsMemRef', 'IsLoad', 'IsStore'), 5),
 
 #Program Counter Operands
     'PC': ('PCState', 'ud', 'pc', (None, None, 'IsControl'), 7),
-    'NPC': ('PCState', 'ud', 'npc', (None, None, 'IsControl'), 8),
-    'Vl' : ('IntReg', 'ud', None, 'IsControl', 9)
+    'NPC': ('PCState', 'ud', 'npc', (None, None, 'IsControl'), 8)
 }};
