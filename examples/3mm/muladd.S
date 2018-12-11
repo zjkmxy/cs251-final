@@ -89,20 +89,32 @@ dotprod:
     #   dotprod (int, int *, int *, int) -> int
     # ***********************
     # vxor.vv v2, v2, v2 # v2 <- 0
+    VXOR(2, 2, 2)
 1:
     # vsetvli t0, a0, vint32 # t0 <- vector length
     VSETVL(R_T0, R_A0)
     sub a0, a0, t0 # n <- n - vector to be dealt
+    mul t1, t0, a3 # t1 <- sizeof(Y[])
     slli t0, t0, 2 # t0 <- sizeof(int32[t0])
     # vlw.v v0, (a1) # v0 = x[]
+    VLW(0, R_A1, 0)
     # vlsw.v v1, (a2), a3 # v1 = y[][a3]
+    VLSW(1, R_A2, 0, R_A3)
     # vmadd.vv v2, v0, v1 # v2 = v0 * v1 + v2
+    VMADD(2, 0, 1)
     add a1, a1, t0
-    add a2, a2, t0
+    add a2, a2, t1
     bne a0, x0, 1b # while (n != 0) 
 2:
+    li a0, 4
+    # vsetvli x0, a0, vint32 # vl <- 4
+    VSETVL(0, R_A0)
     # vredsum v2.s, v2
+    VREDSUM(2, 2)
     # vextract a0, v2, x0
+    la a0, TEMP
+    VSW(2, R_A0, 0)
+    lh a0, 0(a0)
     ret
 
 vextract:
@@ -125,5 +137,8 @@ vextract:
     ret
 
 
+    .data
+TEMP:
+    .word 0, 0, 0, 0
 
 # ===== Text section ends =====
