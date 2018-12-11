@@ -5,7 +5,7 @@
 #define WRITE_SYSCALL 64
 #define STDOUT 1
 
-#define STACK_TOP (_end)
+#define STACK_TOP (_stack_end)
 #define STACK_SIZE 4096
 
 #ifndef __ASSEMBLER__
