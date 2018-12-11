@@ -66,6 +66,9 @@
 #define VREDSUM(vd, vs1) \
     .word (0xCE404057 | REGD(vd) | REGS1(vs1))
 
+#define VEXTRACT(rd, vs1, rs2) \
+    .word (0xA0004057 | REGD(rd) | REGS1(vs1) | REGS2(rs2))
+
 #endif // __ASSEMBLER__
 
 #endif // _VECINSTS_H

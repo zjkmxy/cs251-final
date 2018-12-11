@@ -117,6 +117,26 @@ dotprod:
     lh a0, 0(a0)
     ret
 
+vextract:
+    .globl vextract
+    # ***********************
+    # brief:
+    #   Get ret = X[index]
+    # input: 
+    #   a0 = addr of X
+    #   a1 = index
+    # output: 
+    #   a0 = ret
+    # ctype: 
+    #   vextract (int *, int) -> int
+    # ***********************
+    # vxor.vv v2, v2, v2 # v2 <- 0
+    VSETVL(R_T0, R_A0)
+    VLW(0, R_A0, 0)
+    VEXTRACT(R_A0, 0, R_A1)
+    ret
+
+
     .data
 TEMP:
     .word 0, 0, 0, 0

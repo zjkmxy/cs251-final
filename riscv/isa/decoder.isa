@@ -1670,6 +1670,10 @@ decode QUADRANT default Unknown::unknown() {
                         Vd_sv[i] = Vs1_sv[i] - Vs2_sv[i];
                     }
                 }});
+                0x50: vextract({{
+                    uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
+                    Rd_sd = Vs1_sv[Rs2_ud % csr_vl];
+                }});
                 0x60: vxor({{
                     uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
                     for (int i = 0; i < csr_vl; ++i) {

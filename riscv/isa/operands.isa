@@ -41,7 +41,7 @@ def operand_types {{
     'ud' : 'uint64_t',
     'sf' : 'float',
     'df' : 'double',
-    'sv' : 'uint32_t',
+    'sv' : 'int32_t',
 }};
 
 def operands {{
