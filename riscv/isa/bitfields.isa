@@ -47,9 +47,12 @@ def bitfield RS2    <24:20>;
 def bitfield FUNCT7 <31:25>;
 
 // Vector-Type
-def bitfield VD     <11:7>;
-def bitfield VS1    <19:15>;
-def bitfield VS2    <24:20>;
+def bitfield VD      <11:7>;
+def bitfield VS1     <19:15>;
+def bitfield VS2     <24:20>;
+def bitfield VS3     <31:27>;
+def bitfield VLIMM3  <31:29>;
+def bitfield VSIMM3  <11:9>;
 
 // Bit shifts
 def bitfield SRTYPE <30>;

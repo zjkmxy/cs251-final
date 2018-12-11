@@ -45,6 +45,12 @@
 #define VSW(vs3, rs1, offset) \
     .word (0x00006027 | REGS3(vs3) | REGS1(rs1) | ((offset & 0x07) << 9))
 
+#define VADD(vd, vs1, vs2) \
+    .word (0x90004057 | REGD(vd) | REGS1(vs1) | REGS2(vs2))
+
+#define VSUB(vd, vs1, vs2) \
+    .word (0x92004057 | REGD(vd) | REGS1(vs1) | REGS2(vs2))
+
 #endif // __ASSEMBLER__
 
 #endif // _VECINSTS_H

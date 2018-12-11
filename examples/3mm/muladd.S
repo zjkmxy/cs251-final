@@ -1,4 +1,5 @@
 #include "config.h"
+#include "vecinsts.h"
 
 # ===== Text section starts =====
     .section .text;
@@ -19,16 +20,21 @@ vecadd:
     #   vecadd (int, int *, int *, int *) -> void
     # ***********************
     # vsetvli t0, a0, vint32 # t0 <- vector length
+    VSETVL(R_T0, R_A0)
     sub a0, a0, t0 # n <- n - vector to be dealt
     slli t0, t0, 2 # t0 <- sizeof(int32[t0])
     # vlw.v v0, (a1) # v0 = *x
+    VLW(0, R_A1, 0)
     # vlw.v v1, (a2) # v1 = *y
+    VLW(1, R_A2, 0)
     # vadd.vv v2, v0, v1 # v2 = v0 * v1 + v2
+    VADD(2, 0, 1)
     # vsw.v v2, (a3) # *w = v2
+    VSW(2, R_A3, 0)
     add a1, a1, t0
     add a2, a2, t0
     add a3, a3, t0
-    bne a0, x0, muladd # while (n != 0) 
+    bne a0, x0, vecadd # while (n != 0) 
     ret
 
 muladd:
@@ -47,12 +53,13 @@ muladd:
     #   muladd (int, int *, int *, int *) -> void
     # ***********************
     # vsetvli t0, a0, vint32 # t0 <- vector length
+    VSETVL(R_T0, R_A0)
     sub a0, a0, t0 # n <- n - vector to be dealt
     slli t0, t0, 2 # t0 <- sizeof(int32[t0])
     # vlw.v v0, (a1) # v0 = *x
     # vlw.v v1, (a2) # v1 = *y
     # vlw.v v2, (a3) # v2 = *w
-    # vmadd.vvv v2, v0, v1, v2 # v2 = v0 * v1 + v2
+    # vmadd.vv v2, v0, v1 # v2 = v0 * v1 + v2
     # vsw.v v2, (a3) # *w = v2
     add a1, a1, t0
     add a2, a2, t0
@@ -79,17 +86,18 @@ dotprod:
     # vxor.vv v2, v2, v2 # v2 <- 0
 1:
     # vsetvli t0, a0, vint32 # t0 <- vector length
+    VSETVL(R_T0, R_A0)
     sub a0, a0, t0 # n <- n - vector to be dealt
     slli t0, t0, 2 # t0 <- sizeof(int32[t0])
     # vlw.v v0, (a1) # v0 = x[]
     # vlsw.v v1, (a2), a3 # v1 = y[][a3]
-    # vmadd.vvv v2, v0, v1, v2 # v2 = v0 * v1 + v2
+    # vmadd.vv v2, v0, v1 # v2 = v0 * v1 + v2
     add a1, a1, t0
     add a2, a2, t0
     bne a0, x0, 1b # while (n != 0) 
 2:
     # vredsum v2.s, v2
-    # vmv.x.v a0, v2, x0
+    # vextract a0, v2, x0
     ret
 
 

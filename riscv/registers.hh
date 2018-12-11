@@ -268,6 +268,7 @@ enum MiscRegIndex {
 
     /* Vector CSRs */
     MISCREG_VL,
+    MISCREG_VTYPE,
 
     NUM_MISCREGS
 };
@@ -437,7 +438,8 @@ enum CSRIndex {
     CSR_DSCRATCH = 0x7B2,
 
     /* Vector CSRs */
-    CSR_VL = 0x400
+    CSR_VL = 0x400,
+    CSR_VTYPE = 0x400,
 };
 
 struct CSRMetadata
@@ -608,7 +610,8 @@ const std::map<int, CSRMetadata> CSRData = {
     {CSR_DSCRATCH, {"dscratch", MISCREG_DSCRATCH}},
 
     /* Vector CSRs */
-    {CSR_VL, {"vl", MISCREG_VL}}
+    {CSR_VL, {"vl", MISCREG_VL}},
+    {CSR_VTYPE, {"vtype", MISCREG_VTYPE}}
 };
 
 /**

@@ -138,11 +138,22 @@ int origin_main()
 
 int cfile_main()
 {
-  extern void vecadd(int, int*, int*, int*);
+  extern int vecadd(int, int*, int*, int*);
   int A[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
   int B[10] = {10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
-  int C[10];
+  int C[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, -2};
+  int i;
 
-  vecadd(10, A, B, C);
-  return C[0];
+  vecadd(9, A, B, C);
+  
+  for (i = 0; i < 9; i ++) {
+    if (C[i] != A[i] + B[i]) {
+      return 1;
+    }
+  }
+  if (C[9] != -2) {
+    return 1;
+  }
+
+  return 0;
 }

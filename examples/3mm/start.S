@@ -2,7 +2,6 @@
 # Copied from gem5/tests/test-progs
 
 #include "config.h"
-#include "vecinsts.h"
 
     .macro init; 
     .endm
@@ -33,8 +32,7 @@ _start:
 _prog_main:
     # a0 = cfile_main()
     # Notice that only low byte of a0 will be accepted as retcode.
-    #call cfile_main
-    call _test_in_asm
+    call cfile_main
     # return a0
     # mv a0, a0
 
@@ -45,16 +43,6 @@ _prog_exit:
     fence
     li a7, EXIT_SYSCALL
     ecall
-
-_test_in_asm:
-    li t0, 5
-    VSETVL(R_A0, R_T0)
-    la t0, arr_a
-    la t1, arr_b
-    VLW(1, R_T0, 0)
-    VSW(1, R_T1, 0)
-    lw a0, 0(t1)
-    ret
 
 # ===== Text section ends =====
 
