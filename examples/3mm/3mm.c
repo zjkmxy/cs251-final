@@ -138,25 +138,29 @@ int origin_main()
 
 int cfile_main()
 {
-  extern int muladd(int, int*, int*, int*);
-  int A[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-  int B[10] = {10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
-  int C[10] = {0, 0, 0, 0, 0, 0, 0, 0, -1, -2};
-  int i;
+  // extern int muladd(int, int*, int*, int*);
+  // int A[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  // int B[10] = {10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
+  // int C[10] = {0, 0, 0, 0, 0, 0, 0, 0, -1, -2};
+  // int i;
 
-  muladd(9, A, B, C);
+  // muladd(9, A, B, C);
   
-  for (i = 0; i < 8; i ++) {
-    if (C[i] != A[i] * B[i]) {
-      return i;
-    }
-  }
-  if (C[8] != 17) {
-    return 8;
-  }
-  if (C[9] != -2) {
-    return 9;
-  }
+  // for (i = 0; i < 8; i ++) {
+  //   if (C[i] != A[i] * B[i]) {
+  //     return i;
+  //   }
+  // }
+  // if (C[8] != 17) {
+  //   return 8;
+  // }
+  // if (C[9] != -2) {
+  //   return 9;
+  // }
 
-  return 0;
+  // return 0;
+  extern int vextract(int *, int );
+  int A[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  int b = vextract(A, 2);
+  return b;
 }
