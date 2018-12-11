@@ -1,3 +1,6 @@
+#ifndef _CONFIG_H
+#define _CONFIG_H
+
 #define EXIT_SYSCALL 93
 #define WRITE_SYSCALL 64
 #define STDOUT 1
@@ -12,3 +15,5 @@ extern void _prog_exit(unsigned char);
 
 #endif // __GNUC__
 #endif // __ASSEMBLER__
+
+#endif // _CONFIG_H
