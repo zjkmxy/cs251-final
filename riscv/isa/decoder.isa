@@ -1663,12 +1663,38 @@ decode QUADRANT default Unknown::unknown() {
                     for (int i = 0; i < csr_vl; ++i) {
                         Vd_sv[i] = Vs1_sv[i] + Vs2_sv[i];
                     }
-                }}, FloatCvtOp);
+                }});
                 0x49: vsub({{
-                    for (int i = 0; i < RiscvISA::NumVecElemPerVecReg; ++i) {
+                    uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
+                    for (int i = 0; i < csr_vl; ++i) {
                         Vd_sv[i] = Vs1_sv[i] - Vs2_sv[i];
                     }
-                }}, FloatCvtOp);
+                }});
+                0x60: vxor({{
+                    uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
+                    for (int i = 0; i < csr_vl; ++i) {
+                        Vd_sv[i] = (Vs1_sv[i] ^ Vs2_sv[i]);
+                    }
+                }});
+                0x67: decode VS2{
+                    0x04: vredsum({{
+                        uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
+                        uint32_t ret = 0;
+                        for (int i = 0; i < csr_vl; ++i) {
+                            ret += Vs1_sv[i];
+                        }
+                        for (int i = 0; i < csr_vl; ++i) {
+                            Vd_sv[i] = ret;
+                        }
+                    }});
+                }
+                0x70: vmadd({{
+                    uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
+                    Vd_sv[0] = Vd_sv[0];
+                    for (int i = 0; i < csr_vl; ++i) {
+                        Vd_sv[i] = Vd_merger[i] + (Vs1_sv[i] * Vs2_sv[i]);
+                    }
+                }});
                 0x78: vsetvl({{
                     int len = 4;
                     if (Rs1_ud <= len) {
@@ -1678,7 +1704,7 @@ decode QUADRANT default Unknown::unknown() {
                         Rd_ud = len;
                         xc->setMiscReg(MISCREG_VL, len);
                     }
-                }}, FloatCvtOp);
+                }});
             }
         }
 

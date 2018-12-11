@@ -51,6 +51,15 @@
 #define VSUB(vd, vs1, vs2) \
     .word (0x92004057 | REGD(vd) | REGS1(vs1) | REGS2(vs2))
 
+#define VXOR(vd, vs1, vs2) \
+    .word (0xC0004057 | REGD(vd) | REGS1(vs1) | REGS2(vs2))
+
+#define VMADD(vd, vs1, vs2) \
+    .word (0xE0004057 | REGD(vd) | REGS1(vs1) | REGS2(vs2))
+
+#define VREDSUM(vd, vs1, vs2) \
+    .word (0xCE404057 | REGD(vd) | REGS1(vs1) | REGS2(vs2))
+
 #endif // __ASSEMBLER__
 
 #endif // _VECINSTS_H

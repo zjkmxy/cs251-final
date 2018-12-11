@@ -57,10 +57,15 @@ muladd:
     sub a0, a0, t0 # n <- n - vector to be dealt
     slli t0, t0, 2 # t0 <- sizeof(int32[t0])
     # vlw.v v0, (a1) # v0 = *x
+    VLW(0, R_A1, 0)
     # vlw.v v1, (a2) # v1 = *y
+    VLW(1, R_A2, 0)
     # vlw.v v2, (a3) # v2 = *w
+    VLW(2, R_A3, 0)
     # vmadd.vv v2, v0, v1 # v2 = v0 * v1 + v2
+    VMADD(2, 0, 1)
     # vsw.v v2, (a3) # *w = v2
+    VSW(2, R_A3, 0)
     add a1, a1, t0
     add a2, a2, t0
     add a3, a3, t0
