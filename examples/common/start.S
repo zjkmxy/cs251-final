@@ -51,10 +51,6 @@ _prog_exit:
 # GCC cannot get the correct address of it.
 # But you can use C global variants in asm.
     .data
-arr_a:
-    .word 1, 2, 3, 4, 5, 6, 7, 8
-arr_b:
-    .word 0, 0, 0, 0, 0, 0, 0, 0
 
 # TOHOST section
 # Useless in our program. You cannot use it to communicate with gem5 host.
