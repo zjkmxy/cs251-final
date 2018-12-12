@@ -935,12 +935,14 @@ decode QUADRANT default Unknown::unknown() {
             }
             0x12: decode FUNCT2 { 
                 0x0: decode ROUND_MODE {
-                    0x6: vfmadd({{
-                        uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
-                        for (int i = 0; i < csr_vl; ++i) {
-                            Vd_svf[i] = Vs1_svf[i] * Vs2_svf[i] + Vs3_svf[i];
-                        }
-                    }});
+                    format VVOp{
+                        0x6: vfmadd({{
+                            uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
+                            for (int i = 0; i < csr_vl; ++i) {
+                                Vd_svf[i] = Vs1_svf[i] * Vs2_svf[i] + Vs3_svf[i];
+                            }
+                        }});
+                    }
                     default: fnmsub_s({{
                         uint32_t temp;
                         float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);

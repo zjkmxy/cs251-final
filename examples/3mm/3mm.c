@@ -143,7 +143,7 @@ void vector_3mm(int ni, int nj, int nk, int nl, int nm,
   POLYBENCH_2D_ARRAY_DECL(D, DATA_TYPE, NM, NL, nm, nl);
   POLYBENCH_2D_ARRAY_DECL(G, DATA_TYPE, NI, NL, ni, nl);
 
-int cfile_main()
+int cfile_main_()
 {
   /* Retrieve problem size. */
   int ni = NI;
@@ -168,6 +168,31 @@ int cfile_main()
 	      POLYBENCH_ARRAY(C),
 	      POLYBENCH_ARRAY(D),
 	      POLYBENCH_ARRAY(G));
+
+  return 0;
+}
+
+int cfile_main()
+{
+  extern void fmuladd (int, float *, float *, float *, float *);
+  float A[10] = {0.12, 0.145, 0.52, 0.346, 0.654, 0.324, 0.657, 0.23, 0.56, 0.23};
+  float B[10] = {0.32, 0.432, 0.23, 0.345, 0.853, 0.943, 0.232, 0.92, 0.75, 0.22};
+  float C[10] = {0.12, 0.043, 0.01, 0.246, 0.321, 0.913, 0.007, 0.29, 0.19, 0.50};
+  float W1[10] = {};
+  float W2[10] = {};
+  int i;
+  float diff;
+
+  for (i = 0; i < 10; i ++) {
+    W2[i] = A[i] * B[i] + C[i];
+  }
+  fmuladd(10, A, B, C, W1);
+
+  for (i = 0; i < 10; i ++) {
+    diff = W1[i] - W2[i];
+    if(diff < -1e-4 || diff > 1e-4)
+      return 1;
+  }
 
   return 0;
 }

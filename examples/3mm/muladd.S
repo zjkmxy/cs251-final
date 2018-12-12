@@ -48,7 +48,7 @@ muladd:
     #   a2 = addr of Y
     #   a3 = addr of W
     # output: 
-    #   None
+    #   W[]
     # ctype: 
     #   muladd (int, int *, int *, int *) -> void
     # ***********************
@@ -112,9 +112,7 @@ dotprod:
     # vredsum v2.s, v2
     VREDSUM(2, 2)
     # vextract a0, v2, x0
-    la a0, TEMP
-    VSW(2, R_A0, 0)
-    lh a0, 0(a0)
+    VEXTRACT(R_A0, 2, 0)
     ret
 
 vextract:
@@ -136,9 +134,41 @@ vextract:
     VEXTRACT(R_A0, 0, R_A1)
     ret
 
-
-    .data
-TEMP:
-    .word 0, 0, 0, 0
+fmuladd:
+    .globl fmuladd
+    # ***********************
+    # brief:
+    #   W[i] += X[i] * Y[i]
+    # input: 
+    #   a0 = N
+    #   a1 = addr of X
+    #   a2 = addr of Y
+    #   a3 = addr of Z
+    #   a4 = addr of W
+    # output: 
+    #   W[]
+    # ctype: 
+    #   fmuladd (int, float *, float *, float *, float *) -> void
+    # ***********************
+    # vsetvli t0, a0, vfloat.s # t0 <- vector length
+    VSETVL(R_T0, R_A0)
+    sub a0, a0, t0 # n <- n - vector to be dealt
+    slli t0, t0, 2 # t0 <- sizeof(int32[t0])
+    # vlw.v v0, (a1) # v0 = *x
+    VLW(0, R_A1, 0)
+    # vlw.v v1, (a2) # v1 = *y
+    VLW(1, R_A2, 0)
+    # vlw.v v2, (a3) # v2 = *z
+    VLW(2, R_A3, 0)
+    # vfmadd.vvv v3, v0, v1, v2 # v3 = v0 * v1 + v2
+    VFMADD(3, 0, 1, 2)
+    # vsw.v v3, (a4) # *w = v2
+    VSW(3, R_A4, 0)
+    add a1, a1, t0
+    add a2, a2, t0
+    add a3, a3, t0
+    add a4, a4, t0
+    bne a0, x0, fmuladd # while (n != 0) 
+    ret
 
 # ===== Text section ends =====

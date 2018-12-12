@@ -69,6 +69,15 @@
 #define VEXTRACT(rd, vs1, rs2) \
     .word (0xA0004057 | REGD(rd) | REGS1(vs1) | REGS2(rs2))
 
+#define VFADD(rd, vs1, vs2) \
+    .word (0x00000057 | REGD(rd) | REGS1(vs1) | REGS2(vs2))
+
+#define VFSUB(rd, vs1, vs2) \
+    .word (0x08000057 | REGD(rd) | REGS1(vs1) | REGS2(vs2))
+
+#define VFMADD(rd, vs1, vs2, vs3) \
+    .word (0x0000604b | REGD(rd) | REGS1(vs1) | REGS2(vs2) | REGS3(vs3))
+
 #endif // __ASSEMBLER__
 
 #endif // _VECINSTS_H
