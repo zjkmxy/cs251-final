@@ -35,13 +35,16 @@ void print_array(int n,
 		 DATA_TYPE POLYBENCH_2D(path,N,N,n,n))
 
 {
+  extern int printf(char* fmt, void* arg);
   int i, j;
 
   for (i = 0; i < n; i++)
     for (j = 0; j < n; j++) {
-      //if ((i * n + j) % 20 == 0) printf ("\n");
-      //printf (DATA_PRINTF_MODIFIER, path[i][j]);
+      if ((i * n + j) % 20 == 0) printf ("\n", 0);
+      printf (DATA_PRINTF_MODIFIER, &path[i][j]);
     }
+
+  printf ("\n", 0);
 }
 
 
@@ -105,6 +108,10 @@ int cfile_main(int argc, char** argv)
 
   /* Run kernel. */
   KFLOYD (n, POLYBENCH_ARRAY(path));
+
+#ifdef PRINT_RESULTS
+  print_array(n, path);
+#endif
 
   return 0;
 }

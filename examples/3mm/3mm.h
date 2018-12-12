@@ -4,6 +4,7 @@
 #define SMALL_DATASET
 #define DATA_TYPE_IS_FLOAT
 #define USE_VECTOR
+#define PRINT_RESULTS
 
 #include "config.h"
 

@@ -34,6 +34,13 @@ build/start.o: examples/common/start.S \
 	examples/common/start.S \
 	-o build/start.o
 
+build/string.o: examples/common/string.c \
+			    examples/common/config.h
+	riscv64-unknown-elf-gcc -c \
+	-fPIC \
+	examples/common/string.c \
+	-o build/string.o
+
 build/muladd.o: examples/common/muladd.S \
 			    examples/common/config.h \
 				examples/common/vecinsts.h
@@ -45,13 +52,15 @@ build/3mm: examples/3mm/3mm.c \
 		   examples/3mm/3mm.h \
 		   build/print.o \
            build/start.o \
-		   build/muladd.o
+		   build/muladd.o \
+		   build/string.o
 	riscv64-unknown-elf-gcc -I./examples/common \
 	-nostdlib -nostartfiles -T./examples/link.ld \
 	-fPIC \
 	build/start.o \
     build/print.o \
 	build/muladd.o \
+	build/string.o \
 	examples/3mm/3mm.c \
 	-o build/3mm -O2
 
@@ -59,13 +68,15 @@ build/floyd: examples/floyd_warshall/floyd.c \
 		     examples/floyd_warshall/floyd.h \
 		     build/print.o \
              build/start.o \
-		     build/muladd.o
+		     build/muladd.o \
+			 build/string.o
 	riscv64-unknown-elf-gcc -I./examples/common \
 	-nostdlib -nostartfiles -T./examples/link.ld \
 	-fPIC \
 	build/start.o \
     build/print.o \
 	build/muladd.o \
+	build/string.o \
 	examples/floyd_warshall/floyd.c \
 	-o build/floyd -O2
 

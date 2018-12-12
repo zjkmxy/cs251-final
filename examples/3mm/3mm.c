@@ -64,13 +64,16 @@ static
 void print_array(int ni, int nl,
 		 DATA_TYPE POLYBENCH_2D(G,NI,NL,ni,nl))
 {
+  extern int printf(char* fmt, void* arg);
   int i, j;
 
   for (i = 0; i < ni; i++)
     for (j = 0; j < nl; j++) {
-	//if ((i * ni + j) % 20 == 0) printf ("\n");
-	//printf (DATA_PRINTF_MODIFIER, G[i][j]);
+	if ((i * ni + j) % 20 == 0) printf ("\n", 0);
+	printf (DATA_PRINTF_MODIFIER, &G[i][j]);
     }
+
+  printf ("\n", 0);
 }
 
 
@@ -199,6 +202,10 @@ int cfile_main()
 	      POLYBENCH_ARRAY(C),
 	      POLYBENCH_ARRAY(D),
 	      POLYBENCH_ARRAY(G));
+
+#ifdef PRINT_RESULTS
+  print_array(ni, nl, G);
+#endif
 
   return 0;
 }
