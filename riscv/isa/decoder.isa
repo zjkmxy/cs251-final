@@ -1710,8 +1710,8 @@ decode QUADRANT default Unknown::unknown() {
                 }});
                 0x51: vfextract({{
                     uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
-                    Fd_sf = Vs1_svf[Rs2_ud % csr_vl];
-                    printf("VFEXTRACT %f\n", Vs1_svf[Rs2_ud % csr_vl]);
+                    Fd_bits = reinterpret_cast<const uint32_t&>(Vs1_sv[Rs2_ud % csr_vl]);
+                    printf("VFEXTRACT %f\n", reinterpret_cast<const float&>(Vs1_sv[Rs2_ud % csr_vl]));
                 }});
                 0x60: vxor({{
                     uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
