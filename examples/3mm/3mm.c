@@ -174,25 +174,24 @@ int cfile_main_()
 
 int cfile_main()
 {
+  extern float fdotprod (int, float *, float *, unsigned int);
   extern void fmuladd (int, float *, float *, float *, float *);
   float A[10] = {0.12, 0.145, 0.52, 0.346, 0.654, 0.324, 0.657, 0.23, 0.56, 0.23};
   float B[10] = {0.32, 0.432, 0.23, 0.345, 0.853, 0.943, 0.232, 0.92, 0.75, 0.22};
-  float C[10] = {0.12, 0.043, 0.01, 0.246, 0.321, 0.913, 0.007, 0.29, 0.19, 0.50};
-  float W1[10] = {};
-  float W2[10] = {};
+  float R1, R2 = 0.0;
   int i;
   float diff;
 
-  for (i = 0; i < 10; i ++) {
-    W2[i] = A[i] * B[i] + C[i];
+  R1 = fdotprod(10, A, B, 4);
+  for (int i = 0; i < 10; i ++) {
+    R2 += A[i] * B[i];
   }
-  fmuladd(10, A, B, C, W1);
 
-  for (i = 0; i < 10; i ++) {
-    diff = W1[i] - W2[i];
-    if(diff < -1e-4 || diff > 1e-4)
-      return 1;
+  diff = R1 - R2;
+  if(diff < -1e-4 || diff > 1e-4){
+    return 1;
   }
 
   return 0;
 }
+

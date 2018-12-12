@@ -78,6 +78,12 @@
 #define VFMADD(rd, vs1, vs2, vs3) \
     .word (0x0000604b | REGD(rd) | REGS1(vs1) | REGS2(vs2) | REGS3(vs3))
 
+#define VFREDSUM(vd, vs1) \
+    .word (0x48400057 | REGD(vd) | REGS1(vs1))
+
+#define VFEXTRACT(fd, vs1, rs2) \
+    .word (0xA2004057 | REGD(fd) | REGS1(vs1) | REGS2(rs2))
+
 #endif // __ASSEMBLER__
 
 #endif // _VECINSTS_H
