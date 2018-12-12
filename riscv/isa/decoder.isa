@@ -1680,6 +1680,16 @@ decode QUADRANT default Unknown::unknown() {
                         Vd_sv[i] = Vs1_sv[i] - Vs2_sv[i];
                     }
                 }});
+                0x24: vfredsum({{
+                    uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
+                    float ret = 0;
+                    for (int i = 0; i < csr_vl; ++i) {
+                        ret += Vs1_svf[i];
+                    }
+                    for (int i = 0; i < csr_vl; ++i) {
+                        Vd_svf[i] = ret;
+                    }
+                }});
                 0x48: vadd({{
                     uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
                     for (int i = 0; i < csr_vl; ++i) {
