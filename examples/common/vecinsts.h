@@ -99,6 +99,9 @@
 #define VSLT(vd, vs1, vs2, mask) \
     .word (0xD4004057 | REGD(vd) | REGS1(vs1) | REGS2(vs2) | (mask << 12))
 
+#define VFMIN(vd, vs1, vs2, mask) \
+    .word (0x38000057 | REGD(vd) | REGS1(vs1) | REGS2(vs2) | (mask << 12))
+
 #endif // __ASSEMBLER__
 
 #endif // _VECINSTS_H
