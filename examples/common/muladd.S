@@ -88,9 +88,9 @@ dotprod:
     # ctype: 
     #   dotprod (int, int *, int *, int) -> int
     # ***********************
-    li a0, 4
+    li t0, 4
     # vsetvli x0, a0, vint32 # vl <- 4
-    VSETVL(0, R_A0)
+    VSETVL(0, R_T0)
     # vxor.vv v2, v2, v2 # v2 <- 0
     VXOR(2, 2, 2, MASK_VECTOR)
 1:
@@ -189,9 +189,9 @@ fdotprod:
     # ctype: 
     #   fdotprod (int, float *, float *, unsigned int) -> float
     # ***********************
-    li a0, 4
+    li t0, 4
     # vsetvli x0, a0, vint32 # vl <- 4
-    VSETVL(0, R_A0)
+    VSETVL(0, R_T0)
     # vxor.vv v2, v2, v2 # v2 <- 0
     VXOR(2, 2, 2, MASK_VECTOR)
 1:

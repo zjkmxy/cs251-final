@@ -23,7 +23,7 @@ dis_relax:
     # vsetvli x0, a0, vint32 # vl <- 4
     VSETVL(0, R_T0)
     # vmv v3.s, a2 # v3 = edge
-    # vmergex v3, a2, v3
+    VMERGEX(3, R_A2, 3, MASK_SCALAR)
 1:
     # vsetvli t0, a0, vint32 # t0 <- vector length
     VSETVL(R_T0, R_A0)
@@ -36,12 +36,14 @@ dis_relax:
     # vadd.vv v1, v1, v3 # v1 = v1 + v3
     VADD(1, 1, 3, MASK_VECTOR)
     # vslt v0, v1, v2
+    VSLT(0, 1, 2)
     # vmerge v2, v1, v2, v0.t # v2 = v1 < v2 ? v1 : v2
+    VMERGE(2, 1, 2, MASK_V0T)
     # vsw.v v2, (a3) # *w = v2
     VSW(2, R_A3, 0)
     add a1, a1, t0
     add a3, a3, t0
-    bne a0, x0, vecadd # while (n != 0) 
+    bne a0, x0, 1b # while (n != 0) 
     ret
 
 # ===== Text section ends =====

@@ -90,9 +90,14 @@
     .word (0xA2004057 | REGD(fd) | REGS1(vs1) | REGS2(rs2))
 
 
-#define VINSERT(vd, rs1, rs2) \
-    .word (0X8004057 | REGD(vd) | REGS1(rs1) | REGS2(rs2))
+#define VMERGE(vd, vs1, vs2, mask) \
+    .word (0xC2004057 | REGD(vd) | REGS1(vs1) | REGS2(vs2) | (mask << 12))
 
+#define VMERGEX(vd, rs1, vs2, mask) \
+    .word (0xCA004057 | REGD(vd) | REGS1(rs1) | REGS2(vs2) | (mask << 12))
+
+#define VSLT(vd, vs1, vs2, mask) \
+    .word (0xD4004057 | REGD(vd) | REGS1(vs1) | REGS2(vs2) | (mask << 12))
 
 #endif // __ASSEMBLER__
 
