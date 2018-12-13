@@ -940,7 +940,6 @@ decode QUADRANT default Unknown::unknown() {
                             uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
                             for (int i = 0; i < csr_vl; ++i) {
                                 Vd_svf[i] = Vs1_svf[i] * Vs2_svf[i] + Vs3_svf[i];
-                                printf("VFMADD %f * %f + %f\n", Vs1_svf[i], Vs2_svf[i], Vs3_svf[i]);
                             }
                         }});
                     }
@@ -1690,7 +1689,6 @@ decode QUADRANT default Unknown::unknown() {
                     for (int i = 0; i < csr_vl; ++i) {
                         Vd_svf[i] = ret;
                     }
-                    printf("REDUCE TO %f\n", ret);
                 }});
                 0x48: vadd({{
                     uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
