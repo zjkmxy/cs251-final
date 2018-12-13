@@ -40,6 +40,64 @@ def template VectorExecute {{
 
         %(op_decl)s;
         %(op_rd)s;
+
+        int mask[4];
+
+        /*
+        class TmpInst : public StaticInst {
+            public:
+            TmpInst() 
+                : StaticInst((const char *)(0), machInst, IntAluOp)
+            {
+                _destRegIdx[_numSrcRegs++] = RegId(VecRegClass, 0);
+            }
+            std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const override {
+                return std::string("");
+            }
+            virtual Fault execute(ExecContext *xc, Trace::InstRecord *traceData) const override {
+                return static_cast<Fault>(0);
+            }
+            virtual void advancePC(TheISA::PCState &pcState) const override {}
+
+        };
+        TmpInst _tmpInst;
+        const TheISA::VecRegContainer& tmp_mask = xc -> readVecRegOperand(&_tmpInst, 0);
+        auto Vmask = tmp_mask.as<int32_t>();
+        */
+
+        
+        switch (VMASKE) {
+            case 0x0:
+                //memset((void *)mask, 2, 4);
+                mask[0] = 2;
+                break;
+            case 0x1:
+                //memset((void *)mask, 1, 4);
+                mask[0] = 3;
+                break;
+            case 0x2:
+                for (int i = 0; i < 4; ++i) {
+                    //if ((V0[i] & 0x1) == 0) {
+                    //    mask[i] = 1;
+                    //} else {
+                    //    mask[i] = 0;
+                    //}
+                }
+                mask[0] = 0;
+                break;
+            case 0x3:
+                for (int i = 0; i < 4; ++i) {
+                    //if ((V0[i] & 1) == 1) {
+                    //    mask[i] = 1;
+                    //} else {
+                    //    mask[i] = 0;
+                    //}
+                }
+                mask[0] = 1;
+                break;
+        }
+        if(mask[0]) {} else {}
+
         if (fault == NoFault) {
             if (fault == NoFault) {
                 %(code)s;

@@ -1694,14 +1694,32 @@ decode QUADRANT default Unknown::unknown() {
                 }});
                 0x48: vadd({{
                     uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
-                    for (int i = 0; i < csr_vl; ++i) {
-                        Vd_sv[i] = Vs1_sv[i] + Vs2_sv[i];
+                    if (mask[0] == 2) {
+                        int tmp_scalar = Vs1_sv[0] + Vs2_sv[0];
+                        for (int i = 0; i < csr_vl; ++i) {
+                            Vd_sv[i] = tmp_scalar;    
+                        }
+                    } else {
+                        for (int i = 0; i < csr_vl; ++i) {
+                            if (mask[0] == 3 || (V0_sv[i] & 1) == mask[0]) {
+                                Vd_sv[i] = Vs1_sv[i] + Vs2_sv[i];
+                            }
+                        }
                     }
                 }});
                 0x49: vsub({{
                     uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
-                    for (int i = 0; i < csr_vl; ++i) {
-                        Vd_sv[i] = Vs1_sv[i] - Vs2_sv[i];
+                    if (mask[0] == 2) {
+                        int tmp_scalar = Vs1_sv[0] - Vs2_sv[0];
+                        for (int i = 0; i < csr_vl; ++i) {
+                            Vd_sv[i] = tmp_scalar;    
+                        }
+                    } else {
+                        for (int i = 0; i < csr_vl; ++i) {
+                            if (mask[0] == 3 || (V0_sv[i] & 1) == mask[0]) {
+                                Vd_sv[i] = Vs1_sv[i] - Vs2_sv[i];
+                            }
+                        }
                     }
                 }});
                 0x50: vextract({{
@@ -1711,7 +1729,6 @@ decode QUADRANT default Unknown::unknown() {
                 0x51: vfextract({{
                     uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
                     Fd_bits = reinterpret_cast<const uint32_t&>(Vs1_sv[Rs2_ud % csr_vl]);
-                    printf("VFEXTRACT %f\n", reinterpret_cast<const float&>(Vs1_sv[Rs2_ud % csr_vl]));
                 }});
                 0x60: vxor({{
                     uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);

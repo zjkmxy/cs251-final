@@ -82,6 +82,7 @@ def operands {{
     'Vs1_f': ('VecReg', 'svf', 'VS1', 'IsVector', 2),
     'Vs2_f': ('VecReg', 'svf', 'VS2', 'IsVector', 3),
     'Vs3_f': ('VecReg', 'svf', 'VS3', 'IsVector', 4),
+    'V0': ('VecReg', 'sv', '0', 'IsVector', 5),
 
 #Vector CSRs
     'Vl' : ('IntReg', 'ud', None, 'IsControl', 9),
