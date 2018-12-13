@@ -36,6 +36,11 @@
 #define R_T5 0x1e
 #define R_T6 0x1f
 
+#define MASK_SCALAR (0x0)
+#define MASK_VECTOR (0x1)
+#define MASK_V0F    (0x2)
+#define MASK_V0T    (0x3)
+
 #define VSETVL(rd, rs1) \
     .word (0xf0004057 | REGD(rd) | REGS1(rs1))
 
@@ -51,38 +56,51 @@
 #define VSSW(vs3, rs1, offset) \
     .word (0x00006027 | REGS3(vs3) | REGS1(rs1) | REGS2(rs2) | ((offset & 0x07) << 9))
 
-#define VADD(vd, vs1, vs2) \
-    .word (0x90004057 | REGD(vd) | REGS1(vs1) | REGS2(vs2))
+#define VADD(vd, vs1, vs2, mask) \
+    .word (0x90004057 | REGD(vd) | REGS1(vs1) | REGS2(vs2) | (mask << 12))
 
-#define VSUB(vd, vs1, vs2) \
-    .word (0x92004057 | REGD(vd) | REGS1(vs1) | REGS2(vs2))
+#define VSUB(vd, vs1, vs2, mask) \
+    .word (0x92004057 | REGD(vd) | REGS1(vs1) | REGS2(vs2) | (mask << 12))
 
-#define VXOR(vd, vs1, vs2) \
-    .word (0xC0004057 | REGD(vd) | REGS1(vs1) | REGS2(vs2))
+#define VXOR(vd, vs1, vs2, mask) \
+    .word (0xC0004057 | REGD(vd) | REGS1(vs1) | REGS2(vs2) | (mask << 12))
 
-#define VMADD(vd, vs1, vs2) \
-    .word (0xE0004057 | REGD(vd) | REGS1(vs1) | REGS2(vs2))
+#define VMADD(vd, vs1, vs2, mask) \
+    .word (0xE0004057 | REGD(vd) | REGS1(vs1) | REGS2(vs2) | (mask << 12))
 
-#define VREDSUM(vd, vs1) \
-    .word (0xCE404057 | REGD(vd) | REGS1(vs1))
+#define VREDSUM(vd, vs1, mask) \
+    .word (0xCE404057 | REGD(vd) | REGS1(vs1) | (mask << 12))
 
 #define VEXTRACT(rd, vs1, rs2) \
     .word (0xA0004057 | REGD(rd) | REGS1(vs1) | REGS2(rs2))
 
-#define VFADD(rd, vs1, vs2) \
-    .word (0x00000057 | REGD(rd) | REGS1(vs1) | REGS2(vs2))
+#define VFADD(rd, vs1, vs2, mask) \
+    .word (0x00000057 | REGD(rd) | REGS1(vs1) | REGS2(vs2) | (mask << 12))
 
-#define VFSUB(rd, vs1, vs2) \
-    .word (0x08000057 | REGD(rd) | REGS1(vs1) | REGS2(vs2))
+#define VFSUB(rd, vs1, vs2, mask) \
+    .word (0x08000057 | REGD(rd) | REGS1(vs1) | REGS2(vs2) | (mask << 12))
 
 #define VFMADD(rd, vs1, vs2, vs3) \
     .word (0x0000604b | REGD(rd) | REGS1(vs1) | REGS2(vs2) | REGS3(vs3))
 
-#define VFREDSUM(vd, vs1) \
-    .word (0x48400057 | REGD(vd) | REGS1(vs1))
+#define VFREDSUM(vd, vs1, mask) \
+    .word (0x48400057 | REGD(vd) | REGS1(vs1) | (mask << 12))
 
 #define VFEXTRACT(fd, vs1, rs2) \
     .word (0xA2004057 | REGD(fd) | REGS1(vs1) | REGS2(rs2))
+
+
+#define VMERGE(vd, vs1, vs2, mask) \
+    .word (0xC2004057 | REGD(vd) | REGS1(vs1) | REGS2(vs2) | (mask << 12))
+
+#define VMERGEX(vd, rs1, vs2, mask) \
+    .word (0xCA004057 | REGD(vd) | REGS1(rs1) | REGS2(vs2) | (mask << 12))
+
+#define VSLT(vd, vs1, vs2, mask) \
+    .word (0xD4004057 | REGD(vd) | REGS1(vs1) | REGS2(vs2) | (mask << 12))
+
+#define VFMIN(vd, vs1, vs2, mask) \
+    .word (0x38000057 | REGD(vd) | REGS1(vs1) | REGS2(vs2) | (mask << 12))
 
 #endif // __ASSEMBLER__
 

@@ -73,15 +73,20 @@ static
 void vector_floyd_warshall(int n,
 			   DATA_TYPE POLYBENCH_2D(path,N,N,n,n))
 {
+  extern void dis_relax (int, int *, int, int *);
+  extern void fdis_relax (int, float *, float, float *);
+#ifdef DATA_TYPE_IS_FLOAT
+#define DISRELAX fdis_relax
+#else
+#define DISRELAX dis_relax
+#endif
+
   int i, j, k;
 
 #pragma scop
   for (k = 0; k < _PB_N; k++) {
     for(i = 0; i < _PB_N; i++) {
-	    for (j = 0; j < _PB_N; j++) {
-        path[i][j] = path[i][j] < path[i][k] + path[k][j] ?
-                     path[i][j] : path[i][k] + path[k][j];
-      }
+	    DISRELAX(_PB_N, path[i], path[i][k], path[k]);
     }
   }
 #pragma endscop

@@ -1,5 +1,5 @@
-#ifndef _FLOYD_H
-# define _FLOYD_H
+#ifndef _SIEVE_H
+# define _SIEVE_H
 
 #define MINI_DATASET
 #define DATA_TYPE_IS_INT
@@ -11,28 +11,26 @@
 # if !defined(N)
 /* Define sample dataset sizes. */
 #  ifdef MINI_DATASET
-#   define N 60
+#   define N 100
 #  endif
 
 #  ifdef SMALL_DATASET
-#   define N 180
+#   define N 1000
 #  endif
 
 #  ifdef MEDIUM_DATASET
-#   define N 500
+#   define N 10000
 #  endif
 
 #  ifdef LARGE_DATASET
-#   define N 2800
+#   define N 1000000
 #  endif
 
 #  ifdef EXTRALARGE_DATASET
-#   define N 5600
+#   define N 10000000
 #  endif
 
 
 #endif /* !N */
-
-# define _PB_N POLYBENCH_LOOP_BOUND(N,n)
 
 #endif /* !_FLOYD_H */
