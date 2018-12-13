@@ -21,29 +21,38 @@ void kernel_linear_sieve(){
     for(i = 2; i < N; i ++) {
         if(!flag[i]){
             prime[prime_cnt ++] = i;
+            flag[i] = prime_cnt;
         }
-        for(j = 0; j < prime_cnt; j ++){
+        for(j = 0; j < flag[i]; j ++){
             p = prime[j] * i;
             if(p >= N){
                 break;
             }
-            flag[p] = 1;
-            if(i % prime[j] == 0){
-                break;
-            }
+            flag[p] = j + 1;
         }
     }
 }
 
 void vector_linear_sieve(){
-    extern void sieve_with (int, int, int *, int, int *);
+    extern void sieve_with2 (int, int, int *, int, int *);
 
-    int i;
+    int i, j, p;
     for(i = 2; i < N; i ++) {
         if(!flag[i]){
             prime[prime_cnt ++] = i;
+            flag[i] = prime_cnt;
         }
-        sieve_with(N, i, prime, prime_cnt, flag);
+        if (flag[i] > 3){
+            sieve_with2(N, i, prime, flag[i], flag);
+        }else{
+            for(j = 0; j < flag[i]; j ++){
+                p = prime[j] * i;
+                if(p >= N){
+                    break;
+                }
+                flag[p] = j + 1;
+            }
+        }
     }
 }
 

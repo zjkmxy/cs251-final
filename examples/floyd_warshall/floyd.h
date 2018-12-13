@@ -1,10 +1,10 @@
 #ifndef _FLOYD_H
 # define _FLOYD_H
 
-#define MINI_DATASET
+#define LARGE_DATASET
 #define DATA_TYPE_IS_FLOAT
 #define USE_VECTOR
-#define PRINT_RESULTS
+//#define PRINT_RESULTS
 
 #include "config.h"
 

@@ -1,10 +1,10 @@
-test: all
-	../gem5/./build/RISCV/gem5.opt ../gem5/configs/example/se.py -c build/sieve
-
 all: build \
 	 build/3mm \
 	 build/floyd \
 	 build/sieve
+
+test: all
+	../gem5/./build/RISCV/gem5.opt ../gem5/configs/example/se.py -c build/sieve
 
 build:
 	mkdir -p build

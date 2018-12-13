@@ -1,9 +1,9 @@
 #ifndef _SIEVE_H
 # define _SIEVE_H
 
-#define SMALL_DATASET
+#define N 100000
 #define USE_VECTOR
-#define PRINT_RESULTS
+//#define PRINT_RESULTS
 
 #include "config.h"
 
