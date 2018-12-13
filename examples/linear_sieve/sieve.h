@@ -1,7 +1,7 @@
 #ifndef _SIEVE_H
 # define _SIEVE_H
 
-#define MINI_DATASET
+#define SMALL_DATASET
 #define USE_VECTOR
 #define PRINT_RESULTS
 
@@ -10,7 +10,7 @@
 # if !defined(N)
 /* Define sample dataset sizes. */
 #  ifdef MINI_DATASET
-#   define N 100
+#   define N 200
 #  endif
 
 #  ifdef SMALL_DATASET

@@ -56,6 +56,8 @@ def bitfield VSIMM3  <11:9>;
 def bitfield VMASKE  <13:12>;
 def bitfield VMASKM  <26:25>;
 def bitfield LDTYPE  <8:7>;
+def bitfield VINTIMM <27:20>;
+def bitfield VFUNC   <31:28>;
 
 // Bit shifts
 def bitfield SRTYPE <30>;

@@ -110,13 +110,8 @@ sieve_with:
     VMERGEX(1, R_A1, 1, MASK_SCALAR)
     # vmv v3.s, a0 # v3 = N
     VMERGEX(3, R_A0, 3, MASK_SCALAR)
-    # vmvi v7.0, 0 # v7 = 0
-    VXOR(7, 7, 7, MASK_SCALAR)
-
-    # VSLI !!!!!!
-    li t0, 4
-    VMERGEX(9, R_T0, 9, MASK_SCALAR)
-
+    # vmvi v5.0, 0 # v5 = 0
+    VXOR(5, 5, 5, MASK_SCALAR)
 1:
     # vsetvli t0, a3, vint32 # t0 <- vector length
     VSETVL(R_T0, R_A3)
@@ -130,18 +125,16 @@ sieve_with:
     VSLT(0, 4, 3, MASK_VECTOR)
     # vxor.vv v4, v4, v4, v0.f # v4[i] = v4[i] >= N ? 0 : v4[i]
     VXOR(4, 4, 4, MASK_V0F)
-
-    # VSLI!!!!!
-    VMUL(4, 4, 9, MASK_V0T)
-
+    # v4 = v4 << 2 ; Calculate offset
+    VSLI(4, 4, 2, MASK_V0T)
     # flag[v4] = v0
     VSXW(R_A4, 4, 0)
-    # v6 = X % v2
-    VREM(6, 1, 2, MASK_V0T)
-    # v0 = v0 & (v6 != 0)
-    VSNE(0, 6, 7, MASK_V0T)
+    # v4 = X % v2
+    VREM(4, 1, 2, MASK_V0T)
+    # v0 = v0 & (v4 != 0)
+    VSNE(0, 4, 5, MASK_V0T)
     # t2 = sum{v0}
-    VREDSUM(0, 0, MASK_VECTOR)
+    VREDSUM(2, 0, MASK_V0T)
     VEXTRACT(R_T2, 2, 0)
     add a2, a2, t0
     # while(t2 == 4)

@@ -7,6 +7,7 @@
 #define REGS1(no) ((no & 0x1F) << 15)
 #define REGS2(no) ((no & 0x1F) << 20)
 #define REGS3(no) ((no & 0x1F) << 27)
+#define MAKEIMM(no) ((no & 0xFF) << 20)
 
 #define R_T0 0x05
 #define R_T1 0x06
@@ -116,6 +117,9 @@
 
 #define VSL(vd, vs1, vs2, mask) \
     .word (0x94004057 | REGD(vd) | REGS1(vs1) | REGS2(vs2) | (mask << 12))
+
+#define VSLI(vd, vs1, imm, mask) \
+    .word (0x10004057 | REGD(vd) | REGS1(vs1) | MAKEIMM(imm) | (mask << 12))
 
 #endif // __ASSEMBLER__
 
