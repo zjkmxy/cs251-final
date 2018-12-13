@@ -507,10 +507,16 @@ decode QUADRANT default Unknown::unknown() {
                 }}, inst_flags=FloatMemWriteOp);
             }
             format VectorStore {
-                0x6: vsw({{
-                    Mem_uw = Vs3_sv[i];
-                    stride = Rs2_ud;
-                }}, inst_flags=FloatMemWriteOp);
+                0x6: decode LDTYPE {
+                    0x0: vsw({{
+                        Mem_uw = Vs3_sv[i];
+                        stride = Rs2_ud;
+                    }}, inst_flags=FloatMemWriteOp);
+                    0x1: vsxw({{
+                        EA = (uint32_t)Fs2_bits + offset + Vs2_sv[i];
+                        Mem_uw = Vs3_sv[i];
+                    }});
+                }
             }
         }
 
@@ -1680,6 +1686,18 @@ decode QUADRANT default Unknown::unknown() {
                         Vd_sv[i] = Vs1_sv[i] - Vs2_sv[i];
                     }
                 }});
+                0x1c: vfmin({{
+                    uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
+                    uint32_t minValue = 0x7fffffff; 
+                    for (int i = 0; i < csr_vl; ++i) {
+                        if (Vs1_sv[i] - Vs2_sv[i] < minValue) {
+                            minValue = Vs1_sv[i] - Vs2_sv[i];
+                        }
+                    }
+                    for (int i = 0; i < csr_vl; ++i) {
+                        Vd_sv[i] = minValue;
+                    }
+                }});
                 0x24: vfredsum({{
                     uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
                     float ret = 0;
@@ -1690,16 +1708,28 @@ decode QUADRANT default Unknown::unknown() {
                         Vd_svf[i] = ret;
                     }
                 }});
+                0x42: vrem({{
+                    uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
+                    for (int i = 0; i < csr_vl; ++i) {
+                        Vd_sv[i] = Vs1_sv[i] % Vs2_sv[i];
+                    }
+                }});
+                0x44: vmul({{
+                    uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
+                    for (int i = 0; i < csr_vl; ++i) {
+                        Vd_sv[i] = Vs1_sv[i] * Vs2_sv[i];
+                    }
+                }});
                 0x48: vadd({{
                     uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
-                    if (mask[0] == 2) {
+                    if (mask == 2) {
                         int tmp_scalar = Vs1_sv[0] + Vs2_sv[0];
                         for (int i = 0; i < csr_vl; ++i) {
                             Vd_sv[i] = tmp_scalar;    
                         }
                     } else {
                         for (int i = 0; i < csr_vl; ++i) {
-                            if (mask[0] == 3 || (V0_sv[i] & 1) == mask[0]) {
+                            if (mask == 3 || (V0_sv[i] & 1) == mask) {
                                 Vd_sv[i] = Vs1_sv[i] + Vs2_sv[i];
                             }
                         }
@@ -1707,14 +1737,14 @@ decode QUADRANT default Unknown::unknown() {
                 }});
                 0x49: vsub({{
                     uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
-                    if (mask[0] == 2) {
+                    if (mask == 2) {
                         int tmp_scalar = Vs1_sv[0] - Vs2_sv[0];
                         for (int i = 0; i < csr_vl; ++i) {
                             Vd_sv[i] = tmp_scalar;    
                         }
                     } else {
                         for (int i = 0; i < csr_vl; ++i) {
-                            if (mask[0] == 3 || (V0_sv[i] & 1) == mask[0]) {
+                            if (mask == 3 || (V0_sv[i] & 1) == mask) {
                                 Vd_sv[i] = Vs1_sv[i] - Vs2_sv[i];
                             }
                         }
@@ -1746,6 +1776,26 @@ decode QUADRANT default Unknown::unknown() {
                         }
                     }});
                 }
+                0x68: vseq({{
+                    uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
+                     for (int i = 0; i < csr_vl; ++i) {
+                         if (Vs1_sv[i] == Vs2_sv[i]) {
+                             Vd_sv[i] = 1;
+                         } else {
+                             Vd_sv[i] = 0;
+                         }
+                     }
+                }});
+                0x6a: vslt ({{
+                    uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
+                    for (int i = 0; i < csr_vl; ++i) {
+                        if (Vs1_sv[i] < Vs2_sv[i]) {
+                            Vd_sv[i] = 1;
+                        } else {
+                            Vd_sv[i] = 0;
+                        }
+                    }
+                }});
                 0x70: vmadd({{
                     uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
                     Vd_sv[0] = Vd_sv[0];
