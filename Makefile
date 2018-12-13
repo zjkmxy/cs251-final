@@ -1,5 +1,5 @@
 test: all
-	../gem5/./build/RISCV/gem5.opt ../gem5/configs/example/se.py -c build/sieve
+	../gem5/./build/RISCV/gem5.opt ../gem5/configs/example/se.py -c build/floyd
 
 all: build \
 	 build/3mm \

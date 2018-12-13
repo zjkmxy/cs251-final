@@ -54,8 +54,8 @@ fdis_relax:
     # input: 
     #   a0 = N
     #   a1 = addr of X
-    #   a2 = weight of edge
-    #   a3 = addr of W
+    #   fa0 = weight of edge
+    #   a2 = addr of W
     # output: 
     #   W[]
     # ctype: 
@@ -64,9 +64,9 @@ fdis_relax:
     li t0, 4
     # vsetvli x0, a0, vint32 # vl <- 4
     VSETVL(0, R_T0)
-    # fmv.x.w Needed?
+    fmv.x.w a3, fa0
     # vmv v3.s, a2 # v3 = edge
-    VMERGEX(3, R_A2, 3, MASK_SCALAR)
+    VMERGEX(3, R_A3, 3, MASK_SCALAR)
 1:
     # vsetvli t0, a0, vint32 # t0 <- vector length
     VSETVL(R_T0, R_A0)
@@ -74,16 +74,16 @@ fdis_relax:
     slli t0, t0, 2 # t0 <- sizeof(int32[t0])
     # vlw.v v1, (a1) # v1 = *x
     VLW(1, R_A1, 0)
-    # vlw.v v2, (a3) # v2 = *w
-    VLW(2, R_A3, 0)
+    # vlw.v v2, (a2) # v2 = *w
+    VLW(2, R_A2, 0)
     # vadd.vv v1, v1, v3 # v1 = v1 + v3
     VFADD(1, 1, 3, MASK_VECTOR)
     # vfmin v2, v1, v2
     VFMIN(2, 1, 2, MASK_VECTOR)
-    # vsw.v v2, (a3) # *w = v2
-    VSW(2, R_A3, 0)
+    # vsw.v v2, (a2) # *w = v2
+    VSW(2, R_A2, 0)
     add a1, a1, t0
-    add a3, a3, t0
+    add a2, a2, t0
     bne a0, x0, 1b # while (n != 0) 
     ret
 

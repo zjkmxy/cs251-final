@@ -41,22 +41,7 @@ def template VectorExecute {{
         %(op_decl)s;
         %(op_rd)s;
 
-        int mask;
-
-        switch (VMASKE) {
-            case 0x0:
-                mask = 2;
-                break;
-            case 0x1:
-                mask = 3;
-                break;
-            case 0x2:
-                mask = 0;
-                break;
-            case 0x3:
-                mask = 1;
-                break;
-        }
+        int mask = (VMASKE ^ 0x2);
         if(mask) {} else {}     /* Keep GCC happy */
 
         if (fault == NoFault) {

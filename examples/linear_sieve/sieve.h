@@ -2,7 +2,6 @@
 # define _SIEVE_H
 
 #define MINI_DATASET
-#define DATA_TYPE_IS_INT
 //#define USE_VECTOR
 #define PRINT_RESULTS
 

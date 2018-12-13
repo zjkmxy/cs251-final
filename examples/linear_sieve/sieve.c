@@ -35,6 +35,16 @@ void kernel_linear_sieve(){
     }
 }
 
+void vector_linear_sieve(){
+    int i;
+    for(i = 2; i < N; i ++) {
+        if(!flag[i]){
+            prime[prime_cnt ++] = i;
+        }
+        //TODO
+    }
+}
+
 int cfile_main(int argc, char** argv)
 {
 

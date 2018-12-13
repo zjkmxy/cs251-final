@@ -1677,14 +1677,14 @@ decode QUADRANT default Unknown::unknown() {
                 0x00: vfadd({{
                     uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
                     if (mask == 2) {
-                        int res = Vs1_sv[0] + Vs2_sv[0];
+                        auto res = Vs1_svf[0] + Vs2_svf[0];
                         for (int i = 0; i < csr_vl; ++i) {
-                            Vd_sv[i] = res;
+                            Vd_svf[i] = res;
                         }    
                     } else {
                         for (int i = 0; i < csr_vl; ++i) {
                             if (mask == 3 || (V0_sv[i] & 1) == mask) {
-                                Vd_sv[i] = Vs1_sv[i] + Vs2_sv[i];
+                                Vd_svf[i] = Vs1_svf[i] + Vs2_svf[i];
                             }
                         }
                     }
@@ -1692,14 +1692,14 @@ decode QUADRANT default Unknown::unknown() {
                 0x01: vfsub({{
                     uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
                     if (mask == 2) {
-                        int res = Vs1_sv[0] - Vs2_sv[0];
+                        auto res = Vs1_svf[0] - Vs2_svf[0];
                         for (int i = 0; i < csr_vl; ++i) {
-                            Vd_sv[i] = res;
+                            Vd_svf[i] = res;
                         }    
                     } else {
                         for (int i = 0; i < csr_vl; ++i) {
                             if (mask == 3 || (V0_sv[i] & 1) == mask) {
-                                Vd_sv[i] = Vs1_sv[i] - Vs2_sv[i];
+                                Vd_svf[i] = Vs1_svf[i] - Vs2_svf[i];
                             }
                         }
                     }
@@ -1707,23 +1707,23 @@ decode QUADRANT default Unknown::unknown() {
                 0x1c: vfmin({{
                     uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
                     if (mask == 2) {
-                        uint32_t minValue = Vs1_sv[0];
-                        if (Vs2_sv[0] < Vs1_sv[0]) {
-                            minValue = Vs2_sv[0];
+                        auto minValue = Vs1_svf[0];
+                        if (Vs2_svf[0] < Vs1_svf[0]) {
+                            minValue = Vs2_svf[0];
                         }
                         for (int i = 0; i < csr_vl; ++i) {
-                            Vd_sv[i] = minValue;
+                            Vd_svf[i] = minValue;
                         }
                     } else {
                         for (int i = 0; i < csr_vl; ++i) {
                             if (mask == 3 || (V0_sv[i] & 1) == mask) {
-                                uint32_t minValue = 0x7fffffff; 
-                                if (Vs1_sv[i] < Vs2_sv[i]) {
-                                    minValue = Vs1_sv[i];
+                                auto minValue = Vs1_svf[i]; 
+                                if (Vs1_svf[i] < Vs2_svf[i]) {
+                                    minValue = Vs1_svf[i];
                                 } else {
-                                    minValue = Vs2_sv[i];
+                                    minValue = Vs2_svf[i];
                                 }
-                                Vd_sv[i] = minValue;
+                                Vd_svf[i] = minValue;
                             }
                         }
                     }
@@ -1818,8 +1818,17 @@ decode QUADRANT default Unknown::unknown() {
                 }});
                 0x60: vxor({{
                     uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
-                    for (int i = 0; i < csr_vl; ++i) {
-                        Vd_sv[i] = (Vs1_sv[i] ^ Vs2_sv[i]);
+                    if (mask == 2) {
+                        int tmp_scalar = (Vs1_sv[0] ^ Vs2_sv[0]);
+                        for (int i = 0; i < csr_vl; ++i) {
+                            Vd_sv[i] = tmp_scalar;    
+                        }
+                    } else {
+                        for (int i = 0; i < csr_vl; ++i) {
+                            if (mask == 3 || (V0_sv[i] & 1) == mask) {
+                                Vd_sv[i] = (Vs1_sv[i] ^ Vs2_sv[i]);
+                            }
+                        }
                     }
                 }});
                 0x61: vmerge({{
@@ -1920,8 +1929,17 @@ decode QUADRANT default Unknown::unknown() {
                 0x70: vmadd({{
                     uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
                     Vd_sv[0] = Vd_sv[0];
-                    for (int i = 0; i < csr_vl; ++i) {
-                        Vd_sv[i] = Vd_merger[i] + (Vs1_sv[i] * Vs2_sv[i]);
+                    if (mask == 2) {
+                        int tmp_scalar = Vd_merger[0] + Vs1_sv[0] * Vs2_sv[0];
+                        for (int i = 0; i < csr_vl; ++i) {
+                            Vd_sv[i] = tmp_scalar;    
+                        }
+                    } else {
+                        for (int i = 0; i < csr_vl; ++i) {
+                            if (mask == 3 || (V0_sv[i] & 1) == mask) {
+                                Vd_sv[i] = Vd_merger[i] + (Vs1_sv[i] * Vs2_sv[i]);
+                            }
+                        }
                     }
                 }});
                 0x78: vsetvl({{
