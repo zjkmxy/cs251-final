@@ -28,7 +28,7 @@ vecadd:
     # vlw.v v1, (a2) # v1 = *y
     VLW(1, R_A2, 0)
     # vadd.vv v2, v0, v1 # v2 = v0 * v1 + v2
-    VADD(2, 0, 1)
+    VADD(2, 0, 1, MASK_VECTOR)
     # vsw.v v2, (a3) # *w = v2
     VSW(2, R_A3, 0)
     add a1, a1, t0
@@ -63,7 +63,7 @@ muladd:
     # vlw.v v2, (a3) # v2 = *w
     VLW(2, R_A3, 0)
     # vmadd.vv v2, v0, v1 # v2 = v0 * v1 + v2
-    VMADD(2, 0, 1)
+    VMADD(2, 0, 1, MASK_VECTOR)
     # vsw.v v2, (a3) # *w = v2
     VSW(2, R_A3, 0)
     add a1, a1, t0
@@ -88,8 +88,11 @@ dotprod:
     # ctype: 
     #   dotprod (int, int *, int *, int) -> int
     # ***********************
+    li a0, 4
+    # vsetvli x0, a0, vint32 # vl <- 4
+    VSETVL(0, R_A0)
     # vxor.vv v2, v2, v2 # v2 <- 0
-    VXOR(2, 2, 2)
+    VXOR(2, 2, 2, MASK_VECTOR)
 1:
     # vsetvli t0, a0, vint32 # t0 <- vector length
     VSETVL(R_T0, R_A0)
@@ -101,7 +104,7 @@ dotprod:
     # vlsw.v v1, (a2), a3 # v1 = y[][a3]
     VLSW(1, R_A2, 0, R_A3)
     # vmadd.vv v2, v0, v1 # v2 = v0 * v1 + v2
-    VMADD(2, 0, 1)
+    VMADD(2, 0, 1, MASK_VECTOR)
     add a1, a1, t0
     add a2, a2, t1
     bne a0, x0, 1b # while (n != 0) 
@@ -110,7 +113,7 @@ dotprod:
     # vsetvli x0, a0, vint32 # vl <- 4
     VSETVL(0, R_A0)
     # vredsum v2.s, v2
-    VREDSUM(2, 2)
+    VREDSUM(2, 2, MASK_VECTOR)
     # vextract a0, v2, x0
     VEXTRACT(R_A0, 2, 0)
     ret
@@ -186,8 +189,11 @@ fdotprod:
     # ctype: 
     #   fdotprod (int, float *, float *, unsigned int) -> float
     # ***********************
+    li a0, 4
+    # vsetvli x0, a0, vint32 # vl <- 4
+    VSETVL(0, R_A0)
     # vxor.vv v2, v2, v2 # v2 <- 0
-    VXOR(2, 2, 2)
+    VXOR(2, 2, 2, MASK_VECTOR)
 1:
     # vsetvli t0, a0, vint32 # t0 <- vector length
     VSETVL(R_T0, R_A0)
@@ -208,18 +214,9 @@ fdotprod:
     # vsetvli x0, a0, vint32 # vl <- 4
     VSETVL(0, R_A0)
     # vredsum v2.s, v2
-    VFREDSUM(2, 2)
+    VFREDSUM(2, 2, MASK_VECTOR)
     # vextract a0, v2, x0
     VFEXTRACT(R_A0, 2, 0)
-    # VEXTRACT(R_A0, 2, 0)
-    # fmv.s.x fa0, a0
-    # la a0, TEMP
-    # VSW(2, R_A0, 0)
-    # flw fa0, 0(a0)
     ret
-
-    .data
-TEMP:
-    .word 0, 0, 0, 0
 
 # ===== Text section ends =====
