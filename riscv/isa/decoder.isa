@@ -1676,48 +1676,106 @@ decode QUADRANT default Unknown::unknown() {
             0x15: decode FUNCT7 {
                 0x00: vfadd({{
                     uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
-                    for (int i = 0; i < csr_vl; ++i) {
-                        Vd_sv[i] = Vs1_sv[i] + Vs2_sv[i];
+                    if (mask == 2) {
+                        int res = Vs1_sv[0] + Vs2_sv[0];
+                        for (int i = 0; i < csr_vl; ++i) {
+                            Vd_sv[i] = res;
+                        }    
+                    } else {
+                        for (int i = 0; i < csr_vl; ++i) {
+                            if (mask == 3 || (V0_sv[i] & 1) == mask) {
+                                Vd_sv[i] = Vs1_sv[i] + Vs2_sv[i];
+                            }
+                        }
                     }
                 }});
                 0x01: vfsub({{
                     uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
-                    for (int i = 0; i < csr_vl; ++i) {
-                        Vd_sv[i] = Vs1_sv[i] - Vs2_sv[i];
+                    if (mask == 2) {
+                        int res = Vs1_sv[0] - Vs2_sv[0];
+                        for (int i = 0; i < csr_vl; ++i) {
+                            Vd_sv[i] = res;
+                        }    
+                    } else {
+                        for (int i = 0; i < csr_vl; ++i) {
+                            if (mask == 3 || (V0_sv[i] & 1) == mask) {
+                                Vd_sv[i] = Vs1_sv[i] - Vs2_sv[i];
+                            }
+                        }
                     }
                 }});
                 0x1c: vfmin({{
                     uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
-                    uint32_t minValue = 0x7fffffff; 
-                    for (int i = 0; i < csr_vl; ++i) {
-                        if (Vs1_sv[i] - Vs2_sv[i] < minValue) {
-                            minValue = Vs1_sv[i] - Vs2_sv[i];
+                    if (mask == 2) {
+                        uint32_t minValue = Vs1_sv[0];
+                        if (Vs2_sv[0] < Vs1_sv[0]) {
+                            minValue = Vs2_sv[0];
                         }
-                    }
-                    for (int i = 0; i < csr_vl; ++i) {
-                        Vd_sv[i] = minValue;
+                        for (int i = 0; i < csr_vl; ++i) {
+                            Vd_sv[i] = minValue;
+                        }
+                    } else {
+                        for (int i = 0; i < csr_vl; ++i) {
+                            if (mask == 3 || (V0_sv[i] & 1) == mask) {
+                                uint32_t minValue = 0x7fffffff; 
+                                if (Vs1_sv[i] < Vs2_sv[i]) {
+                                    minValue = Vs1_sv[i];
+                                } else {
+                                    minValue = Vs2_sv[i];
+                                }
+                                Vd_sv[i] = minValue;
+                            }
+                        }
                     }
                 }});
                 0x24: vfredsum({{
                     uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
-                    float ret = 0;
-                    for (int i = 0; i < csr_vl; ++i) {
-                        ret += Vs1_svf[i];
-                    }
-                    for (int i = 0; i < csr_vl; ++i) {
-                        Vd_svf[i] = ret;
+                    if (mask == 2) {
+                        for (int i = 0; i < csr_vl; ++i) {
+                            Vd_svf[i] = Vs1_svf[0];
+                        }
+                    } else {
+                        float ret = 0;
+                        for (int i = 0; i < csr_vl; ++i) {
+                            if (mask == 3 || (V0_sv[i] & 1) == mask) {
+                                ret += Vs1_svf[i];
+                            }
+                        }
+                        for (int i = 0; i < csr_vl; ++i) {
+                            if (mask == 3 || (V0_sv[i] & 1) == mask) {
+                                Vd_svf[i] = ret;
+                            }
+                        }
                     }
                 }});
                 0x42: vrem({{
                     uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
-                    for (int i = 0; i < csr_vl; ++i) {
-                        Vd_sv[i] = Vs1_sv[i] % Vs2_sv[i];
+                    if (mask == 2) {
+                        int res = Vs1_sv[0] % Vs2_sv[0];
+                        for (int i = 0; i < csr_vl; ++i) {
+                            Vd_sv[i] = res;
+                        }
+                    } else {
+                        for (int i = 0; i < csr_vl; ++i) {
+                            if (mask == 3 || (V0_sv[i] & 1) == mask) {
+                                Vd_sv[i] = Vs1_sv[i] % Vs2_sv[i];
+                            }
+                        }
                     }
                 }});
                 0x44: vmul({{
                     uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
-                    for (int i = 0; i < csr_vl; ++i) {
-                        Vd_sv[i] = Vs1_sv[i] * Vs2_sv[i];
+                    if (mask == 2) {
+                        int res = Vs1_sv[0] * Vs2_sv[0];
+                        for (int i = 0; i < csr_vl; ++i) {
+                            Vd_sv[i] = res;
+                        }
+                    } else {
+                        for (int i = 0; i < csr_vl; ++i) {
+                            if (mask == 3 || (V0_sv[i] & 1) == mask) {
+                                Vd_sv[i] = Vs1_sv[i] * Vs2_sv[i];
+                            }
+                        }
                     }
                 }});
                 0x48: vadd({{
@@ -1764,35 +1822,98 @@ decode QUADRANT default Unknown::unknown() {
                         Vd_sv[i] = (Vs1_sv[i] ^ Vs2_sv[i]);
                     }
                 }});
+                0x61: vmerge({{
+                    uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
+                    if (mask == 2) {
+                        for (int i = 0; i < csr_vl; ++i) {
+                            Vd_sv[i] = Vs1_sv[0];
+                        }
+                    } else {
+                        for (int i = 0; i < csr_vl; ++i) {
+                            if (mask == 3 || (V0_sv[i] & 1) == mask) {
+                                Vd_sv[i] = Vs1_sv[i];
+                            } else {
+                                Vd_sv[i] = Vs2_sv[i];
+                            }
+                        }
+                    }
+                }});
+                0x65: vmergex({{
+                    uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
+                    if (mask == 2) {
+                        for (int i = 0; i < csr_vl; ++i) {
+                            Vd_sv[i] = Rs1_sw;
+                        }
+                    } else {
+                        for (int i = 0; i < csr_vl; ++i) {
+                            if (mask == 3 || (V0_sv[i] & 1) == mask) {
+                                Vd_sv[i] = Rs1_sw;
+                            } else {
+                                Vd_sv[i] = Vs2_sv[i];
+                            }
+                        }
+                    }
+                }});
                 0x67: decode VS2{
                     0x04: vredsum({{
                         uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
-                        uint32_t ret = 0;
-                        for (int i = 0; i < csr_vl; ++i) {
-                            ret += Vs1_sv[i];
-                        }
-                        for (int i = 0; i < csr_vl; ++i) {
-                            Vd_sv[i] = ret;
+                        if (mask == 2) {
+                            for (int i = 0; i < csr_vl; ++i) {
+                                Vd_sv[i] = Vs1_sv[0];
+                            }    
+                        } else {
+                            uint32_t ret = 0;
+                            for (int i = 0; i < csr_vl; ++i) {
+                                if (mask == 3 || (V0_sv[i] & 1) == mask) {
+                                    ret += Vs1_sv[i];
+                                }
+                            }
+                            for (int i = 0; i < csr_vl; ++i) {
+                                if (mask == 3 || (V0_sv[i] & 1) == mask) {
+                                    Vd_sv[i] = ret;
+                                }
+                            }
                         }
                     }});
                 }
                 0x68: vseq({{
                     uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
-                     for (int i = 0; i < csr_vl; ++i) {
-                         if (Vs1_sv[i] == Vs2_sv[i]) {
-                             Vd_sv[i] = 1;
-                         } else {
-                             Vd_sv[i] = 0;
-                         }
-                     }
+                    if (mask == 2) {
+                        int res = (int)(Vs1_sv[0] == Vs2_sv[0]);
+                        for (int i = 0; i < csr_vl; ++i) {
+                            Vd_sv[i] = res;
+                        }
+                    } else {
+                        for (int i = 0; i < csr_vl; ++i) {
+                            if (mask == 3 || (V0_sv[i] & 1) == mask) {
+                                if (Vs1_sv[i] == Vs2_sv[i]) {
+                                    Vd_sv[i] = 1;
+                                } else {
+                                    Vd_sv[i] = 0;
+                                }
+                            }
+                        }
+                    }
                 }});
                 0x6a: vslt ({{
                     uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
-                    for (int i = 0; i < csr_vl; ++i) {
-                        if (Vs1_sv[i] < Vs2_sv[i]) {
-                            Vd_sv[i] = 1;
-                        } else {
-                            Vd_sv[i] = 0;
+                    if (mask == 2) {
+                        int res = 0;
+                        if (Vs1_sv[0] < Vs2_sv[0]) {
+                            res = 1;
+                        }
+                        for (int i = 0; i < csr_vl; ++i) {
+                            Vd_sv[i] = res;
+                        }
+                    } else {
+                        for (int i = 0; i < csr_vl; ++i) {
+                            if (mask == 3 || (V0_sv[i] & 1) == mask) {
+                                if (Vs1_sv[i] < Vs2_sv[i]) {
+                                    Vd_sv[i] = 1;
+                                } else {
+                                    Vd_sv[i] = 0;
+                                }
+                            }
                         }
                     }
                 }});
