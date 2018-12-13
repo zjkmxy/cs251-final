@@ -87,4 +87,66 @@ fdis_relax:
     bne a0, x0, 1b # while (n != 0) 
     ret
 
+sieve_with:
+    .globl sieve_with
+    # ***********************
+    # brief:
+    #   Sieve all
+    # input: 
+    #   a0 = N
+    #   a1 = X
+    #   a2 = addr of prime[]
+    #   a3 = size of prime[]
+    #   a4 = addr of flag[]
+    # output: 
+    #   flag[]
+    # ctype: 
+    #   sieve_with (int, int, int *, int, int *) -> void
+    # ***********************
+    li t0, 4
+    # vsetvli x0, a0, vint32 # vl <- 4
+    VSETVL(0, R_T0)
+    # vmv v1.s, a1 # v1 = X
+    VMERGEX(1, R_A1, 1, MASK_SCALAR)
+    # vmv v3.s, a0 # v3 = N
+    VMERGEX(3, R_A0, 3, MASK_SCALAR)
+    # vmvi v7.0, 0 # v7 = 0
+    VXOR(7, 7, 7, MASK_SCALAR)
+
+    # VSLI !!!!!!
+    li t0, 4
+    VMERGEX(9, R_T0, 9, MASK_SCALAR)
+
+1:
+    # vsetvli t0, a3, vint32 # t0 <- vector length
+    VSETVL(R_T0, R_A3)
+    sub a3, a3, t0
+    slli t0, t0, 2 # t0 <- sizeof(int32[t0])
+    # vlw.v v2, (a2) # v2 = *prime
+    VLW(2, R_A2, 0)
+    # vmul.v v4, v2, v1 # v4 = v2 * X
+    VMUL(4, 2, 1, MASK_VECTOR)
+    # vslt.vv v0, v4, v3 # v0 = v4 < v3
+    VSLT(0, 4, 3, MASK_VECTOR)
+    # vxor.vv v4, v4, v4, v0.f # v4[i] = v4[i] >= N ? 0 : v4[i]
+    VXOR(4, 4, 4, MASK_V0F)
+
+    # VSLI!!!!!
+    VMUL(4, 4, 9, MASK_V0T)
+
+    # flag[v4] = v0
+    VSXW(R_A4, 4, 0)
+    # v6 = X % v2
+    VREM(6, 1, 2, MASK_V0T)
+    # v0 = v0 & (v6 != 0)
+    VSNE(0, 6, 7, MASK_V0T)
+    # t2 = sum{v0}
+    VREDSUM(0, 0, MASK_VECTOR)
+    VEXTRACT(R_T2, 2, 0)
+    add a2, a2, t0
+    # while(t2 == 4)
+    li t3, 4
+    beq t2, t3, 1b
+    ret
+
 # ===== Text section ends =====

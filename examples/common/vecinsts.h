@@ -102,6 +102,21 @@
 #define VFMIN(vd, vs1, vs2, mask) \
     .word (0x38000057 | REGD(vd) | REGS1(vs1) | REGS2(vs2) | (mask << 12))
 
+#define VMUL(vd, vs1, vs2, mask) \
+    .word (0x88004057 | REGD(vd) | REGS1(vs1) | REGS2(vs2) | (mask << 12))
+
+#define VSXW(rs1, vs2, vs3) \
+    .word (0x000060A7 | REGS1(rs1) | REGS2(vs2) | REGS3(vs3))
+
+#define VREM(vd, vs1, vs2, mask) \
+    .word (0x84004057 | REGD(vd) | REGS1(vs1) | REGS2(vs2) | (mask << 12))
+
+#define VSNE(vd, vs1, vs2, mask) \
+    .word (0xD2004057 | REGD(vd) | REGS1(vs1) | REGS2(vs2) | (mask << 12))
+
+#define VSL(vd, vs1, vs2, mask) \
+    .word (0x94004057 | REGD(vd) | REGS1(vs1) | REGS2(vs2) | (mask << 12))
+
 #endif // __ASSEMBLER__
 
 #endif // _VECINSTS_H

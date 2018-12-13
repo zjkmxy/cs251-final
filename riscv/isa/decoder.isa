@@ -513,7 +513,7 @@ decode QUADRANT default Unknown::unknown() {
                         stride = Rs2_ud;
                     }}, inst_flags=FloatMemWriteOp);
                     0x1: vsxw({{
-                        EA = (uint32_t)Fs2_bits + offset + Vs2_sv[i];
+                        EA = Rs1 + offset + Vs2_sv[i];
                         Mem_uw = Vs3_sv[i];
                     }});
                 }
@@ -1896,6 +1896,25 @@ decode QUADRANT default Unknown::unknown() {
                         for (int i = 0; i < csr_vl; ++i) {
                             if (mask == 3 || (V0_sv[i] & 1) == mask) {
                                 if (Vs1_sv[i] == Vs2_sv[i]) {
+                                    Vd_sv[i] = 1;
+                                } else {
+                                    Vd_sv[i] = 0;
+                                }
+                            }
+                        }
+                    }
+                }});
+                0x69: vsne({{
+                    uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
+                    if (mask == 2) {
+                        int res = (Vs1_sv[0] != Vs2_sv[0]) ? 1 : 0;
+                        for (int i = 0; i < csr_vl; ++i) {
+                            Vd_sv[i] = res;
+                        }
+                    } else {
+                        for (int i = 0; i < csr_vl; ++i) {
+                            if (mask == 3 || (V0_sv[i] & 1) == mask) {
+                                if (Vs1_sv[i] != Vs2_sv[i]) {
                                     Vd_sv[i] = 1;
                                 } else {
                                     Vd_sv[i] = 0;

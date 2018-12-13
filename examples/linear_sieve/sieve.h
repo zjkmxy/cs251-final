@@ -2,7 +2,7 @@
 # define _SIEVE_H
 
 #define MINI_DATASET
-//#define USE_VECTOR
+#define USE_VECTOR
 #define PRINT_RESULTS
 
 #include "config.h"

@@ -36,12 +36,16 @@ void kernel_linear_sieve(){
 }
 
 void vector_linear_sieve(){
+extern void sieve_with (int, int, int *, int, int *);
+
     int i;
     for(i = 2; i < N; i ++) {
         if(!flag[i]){
+            //printf("PRIME! %d\n", &i);
             prime[prime_cnt ++] = i;
         }
-        //TODO
+        //printf("ROUND FOR %d\n", &i);
+        sieve_with(N, i, prime, prime_cnt, flag);
     }
 }
 
