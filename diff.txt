@@ -1,0 +1,935 @@
+diff --git a/src/arch/riscv/decoder.cc b/src/arch/riscv/decoder.cc
+index 41a5202..6a14455 100644
+--- a/src/arch/riscv/decoder.cc
++++ b/src/arch/riscv/decoder.cc
+@@ -79,7 +79,7 @@ Decoder::moreBytes(const PCState &pc, Addr fetchPC, MachInst inst)
+ }
+ 
+ StaticInstPtr
+-Decoder::decode(ExtMachInst mach_inst, Addr addr)
++Decoder::decode(ExtMachInst mach_inst, Addr addr)   /* typedef uint64_t ExtMachInst; */
+ {
+     DPRINTF(Decode, "Decoding instruction 0x%08x at address %#x\n",
+             mach_inst, addr);
+diff --git a/src/arch/riscv/decoder.hh b/src/arch/riscv/decoder.hh
+index 7503211..cd20581 100644
+--- a/src/arch/riscv/decoder.hh
++++ b/src/arch/riscv/decoder.hh
+@@ -48,7 +48,7 @@ class ISA;
+ class Decoder
+ {
+   private:
+-    DecodeCache::InstMap<ExtMachInst> instMap;
++    DecodeCache::InstMap<ExtMachInst> instMap;  /* using InstMap = std::unordered_map<EMI, StaticInstPtr>; */
+     bool aligned;
+     bool mid;
+     bool more;
+diff --git a/src/arch/riscv/isa/bitfields.isa b/src/arch/riscv/isa/bitfields.isa
+index 903fce3..2088307 100644
+--- a/src/arch/riscv/isa/bitfields.isa
++++ b/src/arch/riscv/isa/bitfields.isa
+@@ -46,6 +46,19 @@ def bitfield RS1    <19:15>;
+ def bitfield RS2    <24:20>;
+ def bitfield FUNCT7 <31:25>;
+ 
++// Vector-Type
++def bitfield VD      <11:7>;
++def bitfield VS1     <19:15>;
++def bitfield VS2     <24:20>;
++def bitfield VS3     <31:27>;
++def bitfield VLIMM3  <31:29>;
++def bitfield VSIMM3  <11:9>;
++def bitfield VMASKE  <13:12>;
++def bitfield VMASKM  <26:25>;
++def bitfield LDTYPE  <8:7>;
++def bitfield VINTIMM <27:20>;
++def bitfield VFUNC   <31:28>;
++
+ // Bit shifts
+ def bitfield SRTYPE <30>;
+ def bitfield SHAMT5 <24:20>;
+diff --git a/src/arch/riscv/isa/decoder.isa b/src/arch/riscv/isa/decoder.isa
+index 0c1d772..8c43b49 100644
+--- a/src/arch/riscv/isa/decoder.isa
++++ b/src/arch/riscv/isa/decoder.isa
+@@ -406,6 +406,12 @@ decode QUADRANT default Unknown::unknown() {
+                     Fd_bits = Mem;
+                 }}, inst_flags=FloatMemReadOp);
+             }
++            format VectorLoad {
++                0x6: vlw({{
++                    Vd_sv[i] = Mem_uw;
++                    stride = Rs2_ud;
++                }}, inst_flags=FloatMemReadOp);
++            }
+         }
+ 
+         0x03: decode FUNCT3 {
+@@ -500,6 +506,18 @@ decode QUADRANT default Unknown::unknown() {
+                     Mem_ud = Fs2_bits;
+                 }}, inst_flags=FloatMemWriteOp);
+             }
++            format VectorStore {
++                0x6: decode LDTYPE {
++                    0x0: vsw({{
++                        Mem_uw = Vs3_sv[i];
++                        stride = Rs2_ud;
++                    }}, inst_flags=FloatMemWriteOp);
++                    0x1: vsxw({{
++                        EA = Rs1 + offset + Vs2_sv[i];
++                        Mem_uw = Vs3_sv[i];
++                    }});
++                }
++            }
+         }
+ 
+         0x0b: decode FUNCT3 {
+@@ -921,37 +939,47 @@ decode QUADRANT default Unknown::unknown() {
+                     }
+                 }}, FloatMultAccOp);
+             }
+-            0x12: decode FUNCT2 {
+-                0x0: fnmsub_s({{
+-                    uint32_t temp;
+-                    float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
+-                    float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
+-                    float fs3 = reinterpret_cast<float&>(temp = Fs3_bits);
+-                    float fd;
++            0x12: decode FUNCT2 { 
++                0x0: decode ROUND_MODE {
++                    format VVOp{
++                        0x6: vfmadd({{
++                            uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
++                            for (int i = 0; i < csr_vl; ++i) {
++                                Vd_svf[i] = Vs1_svf[i] * Vs2_svf[i] + Vs3_svf[i];
++                            }
++                        }});
++                    }
++                    default: fnmsub_s({{
++                        uint32_t temp;
++                        float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
++                        float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
++                        float fs3 = reinterpret_cast<float&>(temp = Fs3_bits);
++                        float fd;
+ 
+-                    if (std::isnan(fs1) || std::isnan(fs2) ||
+-                            std::isnan(fs3)) {
+-                        if (issignalingnan(fs1) || issignalingnan(fs2)
+-                                || issignalingnan(fs3)) {
+-                            FFLAGS |= FloatInvalid;
+-                        }
+-                        fd = numeric_limits<float>::quiet_NaN();
+-                    } else if (std::isinf(fs1) || std::isinf(fs2) ||
+-                            std::isinf(fs3)) {
+-                        if (signbit(fs1) == signbit(fs2)
+-                                && !std::isinf(fs3)) {
+-                            fd = -numeric_limits<float>::infinity();
+-                        } else if (signbit(fs1) != signbit(fs2)
+-                                && !std::isinf(fs3)) {
+-                            fd = numeric_limits<float>::infinity();
+-                        } else { // Fs3_sf is infinity
+-                            fd = fs3;
++                        if (std::isnan(fs1) || std::isnan(fs2) ||
++                                std::isnan(fs3)) {
++                            if (issignalingnan(fs1) || issignalingnan(fs2)
++                                    || issignalingnan(fs3)) {
++                                FFLAGS |= FloatInvalid;
++                            }
++                            fd = numeric_limits<float>::quiet_NaN();
++                        } else if (std::isinf(fs1) || std::isinf(fs2) ||
++                                std::isinf(fs3)) {
++                            if (signbit(fs1) == signbit(fs2)
++                                    && !std::isinf(fs3)) {
++                                fd = -numeric_limits<float>::infinity();
++                            } else if (signbit(fs1) != signbit(fs2)
++                                    && !std::isinf(fs3)) {
++                                fd = numeric_limits<float>::infinity();
++                            } else { // Fs3_sf is infinity
++                                fd = fs3;
++                            }
++                        } else {
++                            fd = -(fs1*fs2 - fs3);
+                         }
+-                    } else {
+-                        fd = -(fs1*fs2 - fs3);
+-                    }
+-                    Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
+-                }}, FloatMultAccOp);
++                        Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
++                    }}, FloatMultAccOp);
++                }
+                 0x1: fnmsub_d({{
+                     if (std::isnan(Fs1) || std::isnan(Fs2) ||
+                             std::isnan(Fs3)) {
+@@ -1644,6 +1672,324 @@ decode QUADRANT default Unknown::unknown() {
+                 }}, FloatCvtOp);
+             }
+         }
++        format VVOp{
++            0x15: decode VFUNC {
++                0x01: vsli({{
++                    uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
++                    if (mask == 2) {
++                        auto res = (Vs1_sv[0] << VINTIMM);
++                        for (int i = 0; i < csr_vl; ++i) {
++                            Vd_sv[i] = res;
++                        }    
++                    } else {
++                        for (int i = 0; i < csr_vl; ++i) {
++                            if (mask == 3 || (V0_sv[i] & 1) == mask) {
++                                Vd_sv[i] = (Vs1_sv[i] << VINTIMM);
++                            }
++                        }
++                    }
++                }});
++                default: decode FUNCT7 {
++                    0x00: vfadd({{
++                        uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
++                        if (mask == 2) {
++                            auto res = Vs1_svf[0] + Vs2_svf[0];
++                            for (int i = 0; i < csr_vl; ++i) {
++                                Vd_svf[i] = res;
++                            }    
++                        } else {
++                            for (int i = 0; i < csr_vl; ++i) {
++                                if (mask == 3 || (V0_sv[i] & 1) == mask) {
++                                    Vd_svf[i] = Vs1_svf[i] + Vs2_svf[i];
++                                }
++                            }
++                        }
++                    }});
++                    0x01: vfsub({{
++                        uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
++                        if (mask == 2) {
++                            auto res = Vs1_svf[0] - Vs2_svf[0];
++                            for (int i = 0; i < csr_vl; ++i) {
++                                Vd_svf[i] = res;
++                            }    
++                        } else {
++                            for (int i = 0; i < csr_vl; ++i) {
++                                if (mask == 3 || (V0_sv[i] & 1) == mask) {
++                                    Vd_svf[i] = Vs1_svf[i] - Vs2_svf[i];
++                                }
++                            }
++                        }
++                    }});
++                    0x1c: vfmin({{
++                        uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
++                        if (mask == 2) {
++                            auto minValue = Vs1_svf[0];
++                            if (Vs2_svf[0] < Vs1_svf[0]) {
++                                minValue = Vs2_svf[0];
++                            }
++                            for (int i = 0; i < csr_vl; ++i) {
++                                Vd_svf[i] = minValue;
++                            }
++                        } else {
++                            for (int i = 0; i < csr_vl; ++i) {
++                                if (mask == 3 || (V0_sv[i] & 1) == mask) {
++                                    auto minValue = Vs1_svf[i]; 
++                                    if (Vs1_svf[i] < Vs2_svf[i]) {
++                                        minValue = Vs1_svf[i];
++                                    } else {
++                                        minValue = Vs2_svf[i];
++                                    }
++                                    Vd_svf[i] = minValue;
++                                }
++                            }
++                        }
++                    }});
++                    0x24: vfredsum({{
++                        uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
++                        if (mask == 2) {
++                            for (int i = 0; i < csr_vl; ++i) {
++                                Vd_svf[i] = Vs1_svf[0];
++                            }
++                        } else {
++                            float ret = 0;
++                            for (int i = 0; i < csr_vl; ++i) {
++                                if (mask == 3 || (V0_sv[i] & 1) == mask) {
++                                    ret += Vs1_svf[i];
++                                }
++                            }
++                            for (int i = 0; i < csr_vl; ++i) {
++                                if (mask == 3 || (V0_sv[i] & 1) == mask) {
++                                    Vd_svf[i] = ret;
++                                }
++                            }
++                        }
++                    }});
++                    0x42: vrem({{
++                        uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
++                        if (mask == 2) {
++                            int res = Vs1_sv[0] % Vs2_sv[0];
++                            for (int i = 0; i < csr_vl; ++i) {
++                                Vd_sv[i] = res;
++                            }
++                        } else {
++                            for (int i = 0; i < csr_vl; ++i) {
++                                if (mask == 3 || (V0_sv[i] & 1) == mask) {
++                                    Vd_sv[i] = Vs1_sv[i] % Vs2_sv[i];
++                                }
++                            }
++                        }
++                    }});
++                    0x44: vmul({{
++                        uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
++                        if (mask == 2) {
++                            int res = Vs1_sv[0] * Vs2_sv[0];
++                            for (int i = 0; i < csr_vl; ++i) {
++                                Vd_sv[i] = res;
++                            }
++                        } else {
++                            for (int i = 0; i < csr_vl; ++i) {
++                                if (mask == 3 || (V0_sv[i] & 1) == mask) {
++                                    Vd_sv[i] = Vs1_sv[i] * Vs2_sv[i];
++                                }
++                            }
++                        }
++                    }});
++                    0x48: vadd({{
++                        uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
++                        if (mask == 2) {
++                            int tmp_scalar = Vs1_sv[0] + Vs2_sv[0];
++                            for (int i = 0; i < csr_vl; ++i) {
++                                Vd_sv[i] = tmp_scalar;    
++                            }
++                        } else {
++                            for (int i = 0; i < csr_vl; ++i) {
++                                if (mask == 3 || (V0_sv[i] & 1) == mask) {
++                                    Vd_sv[i] = Vs1_sv[i] + Vs2_sv[i];
++                                }
++                            }
++                        }
++                    }});
++                    0x49: vsub({{
++                        uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
++                        if (mask == 2) {
++                            int tmp_scalar = Vs1_sv[0] - Vs2_sv[0];
++                            for (int i = 0; i < csr_vl; ++i) {
++                                Vd_sv[i] = tmp_scalar;    
++                            }
++                        } else {
++                            for (int i = 0; i < csr_vl; ++i) {
++                                if (mask == 3 || (V0_sv[i] & 1) == mask) {
++                                    Vd_sv[i] = Vs1_sv[i] - Vs2_sv[i];
++                                }
++                            }
++                        }
++                    }});
++                    0x50: vextract({{
++                        uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
++                        Rd_sd = Vs1_sv[Rs2_ud % csr_vl];
++                    }});
++                    0x51: vfextract({{
++                        uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
++                        Fd_bits = reinterpret_cast<const uint32_t&>(Vs1_sv[Rs2_ud % csr_vl]);
++                    }});
++                    0x60: vxor({{
++                        uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
++                        if (mask == 2) {
++                            int tmp_scalar = (Vs1_sv[0] ^ Vs2_sv[0]);
++                            for (int i = 0; i < csr_vl; ++i) {
++                                Vd_sv[i] = tmp_scalar;    
++                            }
++                        } else {
++                            for (int i = 0; i < csr_vl; ++i) {
++                                if (mask == 3 || (V0_sv[i] & 1) == mask) {
++                                    Vd_sv[i] = (Vs1_sv[i] ^ Vs2_sv[i]);
++                                }
++                            }
++                        }
++                    }});
++                    0x61: vmerge({{
++                        uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
++                        if (mask == 2) {
++                            for (int i = 0; i < csr_vl; ++i) {
++                                Vd_sv[i] = Vs1_sv[0];
++                            }
++                        } else {
++                            for (int i = 0; i < csr_vl; ++i) {
++                                if (mask == 3 || (V0_sv[i] & 1) == mask) {
++                                    Vd_sv[i] = Vs1_sv[i];
++                                } else {
++                                    Vd_sv[i] = Vs2_sv[i];
++                                }
++                            }
++                        }
++                    }});
++                    0x65: vmergex({{
++                        uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
++                        if (mask == 2) {
++                            for (int i = 0; i < csr_vl; ++i) {
++                                Vd_sv[i] = Rs1_sw;
++                            }
++                        } else {
++                            for (int i = 0; i < csr_vl; ++i) {
++                                if (mask == 3 || (V0_sv[i] & 1) == mask) {
++                                    Vd_sv[i] = Rs1_sw;
++                                } else {
++                                    Vd_sv[i] = Vs2_sv[i];
++                                }
++                            }
++                        }
++                    }});
++                    0x67: decode VS2{
++                        0x04: vredsum({{
++                            uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
++                            if (mask == 2) {
++                                for (int i = 0; i < csr_vl; ++i) {
++                                    Vd_sv[i] = Vs1_sv[0];
++                                }    
++                            } else {
++                                uint32_t ret = 0;
++                                for (int i = 0; i < csr_vl; ++i) {
++                                    if (mask == 3 || (V0_sv[i] & 1) == mask) {
++                                        ret += Vs1_sv[i];
++                                    }
++                                }
++                                for (int i = 0; i < csr_vl; ++i) {
++                                    if (mask == 3 || (V0_sv[i] & 1) == mask) {
++                                        Vd_sv[i] = ret;
++                                    }
++                                }
++                            }
++                        }});
++                    }
++                    0x68: vseq({{
++                        uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
++                        if (mask == 2) {
++                            int res = (int)(Vs1_sv[0] == Vs2_sv[0]);
++                            for (int i = 0; i < csr_vl; ++i) {
++                                Vd_sv[i] = res;
++                            }
++                        } else {
++                            for (int i = 0; i < csr_vl; ++i) {
++                                if (mask == 3 || (V0_sv[i] & 1) == mask) {
++                                    if (Vs1_sv[i] == Vs2_sv[i]) {
++                                        Vd_sv[i] = 1;
++                                    } else {
++                                        Vd_sv[i] = 0;
++                                    }
++                                }
++                            }
++                        }
++                    }});
++                    0x69: vsne({{
++                        uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
++                        if (mask == 2) {
++                            int res = (Vs1_sv[0] != Vs2_sv[0]) ? 1 : 0;
++                            for (int i = 0; i < csr_vl; ++i) {
++                                Vd_sv[i] = res;
++                            }
++                        } else {
++                            for (int i = 0; i < csr_vl; ++i) {
++                                if (mask == 3 || (V0_sv[i] & 1) == mask) {
++                                    if (Vs1_sv[i] != Vs2_sv[i]) {
++                                        Vd_sv[i] = 1;
++                                    } else {
++                                        Vd_sv[i] = 0;
++                                    }
++                                }
++                            }
++                        }
++                    }});
++                    0x6a: vslt ({{
++                        uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
++                        if (mask == 2) {
++                            int res = 0;
++                            if (Vs1_sv[0] < Vs2_sv[0]) {
++                                res = 1;
++                            }
++                            for (int i = 0; i < csr_vl; ++i) {
++                                Vd_sv[i] = res;
++                            }
++                        } else {
++                            for (int i = 0; i < csr_vl; ++i) {
++                                if (mask == 3 || (V0_sv[i] & 1) == mask) {
++                                    if (Vs1_sv[i] < Vs2_sv[i]) {
++                                        Vd_sv[i] = 1;
++                                    } else {
++                                        Vd_sv[i] = 0;
++                                    }
++                                }
++                            }
++                        }
++                    }});
++                    0x70: vmadd({{
++                        uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
++                        Vd_sv[0] = Vd_sv[0];
++                        if (mask == 2) {
++                            int tmp_scalar = Vd_merger[0] + Vs1_sv[0] * Vs2_sv[0];
++                            for (int i = 0; i < csr_vl; ++i) {
++                                Vd_sv[i] = tmp_scalar;    
++                            }
++                        } else {
++                            for (int i = 0; i < csr_vl; ++i) {
++                                if (mask == 3 || (V0_sv[i] & 1) == mask) {
++                                    Vd_sv[i] = Vd_merger[i] + (Vs1_sv[i] * Vs2_sv[i]);
++                                }
++                            }
++                        }
++                    }});
++                    0x78: vsetvl({{
++                        int len = 4;
++                        if (Rs1_ud <= len) {
++                            Rd_ud = Rs1_ud;
++                            xc->setMiscReg(MISCREG_VL, Rs1_ud);
++                        } else {
++                            Rd_ud = len;
++                            xc->setMiscReg(MISCREG_VL, len);
++                        }
++                    }});
++                }
++            }
++        }
+ 
+         0x18: decode FUNCT3 {
+             format BOp {
+diff --git a/src/arch/riscv/isa/formats/formats.isa b/src/arch/riscv/isa/formats/formats.isa
+index df2b3b8..3844e61 100644
+--- a/src/arch/riscv/isa/formats/formats.isa
++++ b/src/arch/riscv/isa/formats/formats.isa
+@@ -38,6 +38,7 @@
+ ##include "mem.isa"
+ ##include "fp.isa"
+ ##include "amo.isa"
++##include "vector.isa"
+ 
+ // Include formats for nonstandard extensions
+ ##include "compressed.isa"
+diff --git a/src/arch/riscv/isa/formats/vector.isa b/src/arch/riscv/isa/formats/vector.isa
+new file mode 100644
+index 0000000..ded1b20
+--- /dev/null
++++ b/src/arch/riscv/isa/formats/vector.isa
+@@ -0,0 +1,291 @@
++// -*- mode:c++ -*-
++
++// Copyright (c) 2018 University of California, Los Angeles
++// All rights reserved.
++//
++// Redistribution and use in source and binary forms, with or without
++// modification, are permitted provided that the following conditions are
++// met: redistributions of source code must retain the above copyright
++// notice, this list of conditions and the following disclaimer;
++// redistributions in binary form must reproduce the above copyright
++// notice, this list of conditions and the following disclaimer in the
++// documentation and/or other materials provided with the distribution;
++// neither the name of the copyright holders nor the names of its
++// contributors may be used to endorse or promote products derived from
++// this software without specific prior written permission.
++//
++// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++//
++// Authors: Xinyu Ma, Zhaoning Kong
++
++////////////////////////////////////////////////////////////////////
++//
++// Vector operation instructions
++//
++def template VectorExecute {{
++    Fault %(class_name)s::execute(ExecContext *xc,
++        Trace::InstRecord *traceData) const
++    {
++        Fault fault = NoFault;
++
++        %(op_decl)s;
++        %(op_rd)s;
++
++        int mask = (VMASKE ^ 0x2);
++        if(mask) {} else {}     /* Keep GCC happy */
++
++        if (fault == NoFault) {
++            if (fault == NoFault) {
++                %(code)s;
++            }
++
++            if (fault == NoFault) {
++                %(op_wb)s;
++            }
++        }
++        return fault;
++    }
++}};
++
++def template VectorLoadStoreConstructor {{
++    %(class_name)s::%(class_name)s(ExtMachInst machInst):
++        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
++    {
++        %(constructor)s;
++        %(offset_code)s;
++    }
++}};
++
++let {{
++def VectorLoadStoreBase(name, Name, offset_code, ea_code, memacc_code, mem_flags,
++                        inst_flags, base_class, postacc_code='', decode_template=BasicDecode,
++                        exec_template_base=''):
++    # Make sure flags are in lists (convert to lists if not).
++    mem_flags = makeList(mem_flags)
++    inst_flags = makeList(inst_flags)
++
++    iop = InstObjParams(name, Name, base_class,
++        {'offset_code': offset_code, 'ea_code': ea_code,
++         'memacc_code': memacc_code, 'postacc_code': postacc_code },
++        inst_flags)
++
++    if mem_flags:
++        mem_flags = [ 'Request::%s' % flag for flag in mem_flags ]
++        s = '\n\tmemAccessFlags = ' + string.join(mem_flags, '|') + ';'
++        iop.constructor += s
++
++    # select templates
++
++    fullExecTemplate = eval(exec_template_base + 'Execute')
++    initiateAccTemplate = eval(exec_template_base + 'InitiateAcc')
++    completeAccTemplate = eval(exec_template_base + 'CompleteAcc')
++
++    # (header_output, decoder_output, decode_block, exec_output)
++    return (LoadStoreDeclare.subst(iop),
++        VectorLoadStoreConstructor.subst(iop),
++        decode_template.subst(iop),
++        fullExecTemplate.subst(iop) +
++        initiateAccTemplate.subst(iop) +
++        completeAccTemplate.subst(iop))
++}};
++
++def template VectorLoadExecute {{
++    Fault
++    %(class_name)s::execute(
++        ExecContext *xc, Trace::InstRecord *traceData) const
++    {
++        Addr EA;
++        Fault fault = NoFault;
++
++        %(op_decl)s;
++        %(op_rd)s;
++        %(ea_code)s;
++
++        if (fault == NoFault) {
++            uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
++            uint32_t stride = 0;
++            for (int i = 0; i < csr_vl && fault == NoFault; ++i) {
++                fault = readMemAtomic(xc, traceData, EA, Mem, memAccessFlags);
++                %(memacc_code)s;
++                if (stride == 0) {
++                    EA += 4;
++                } else {
++                    EA += stride;
++                }
++            }
++        }
++
++        if (fault == NoFault) {
++            %(op_wb)s;
++        }
++
++        return fault;
++    }
++}};
++
++def template VectorLoadInitiateAcc {{
++    Fault
++    %(class_name)s::initiateAcc(ExecContext *xc,
++        Trace::InstRecord *traceData) const
++    {
++        Addr EA;
++        Fault fault = NoFault;
++
++        %(op_src_decl)s;
++        %(op_rd)s;
++        %(ea_code)s;
++
++        if (fault == NoFault) {
++            fault = initiateMemRead(xc, traceData, EA, Mem, memAccessFlags);
++        }
++
++        return fault;
++    }
++}};
++
++def template VectorLoadCompleteAcc {{
++    Fault
++    %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
++        Trace::InstRecord *traceData) const
++    {
++        Fault fault = NoFault;
++
++        %(op_decl)s;
++        %(op_rd)s;
++
++        getMem(pkt, Mem, traceData);
++
++        if (fault == NoFault) {
++            uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
++            uint32_t stride = 0;
++            int i = 0;
++
++            %(memacc_code)s;
++            printf("PIPELINED CPUs ARE NOT SUPPORTED: %u\n", Mem);
++
++            Addr EA;
++            %(ea_code)s;
++            for (int i = 0; i < csr_vl && fault == NoFault; ++i) {
++                fault = readMemAtomic(xc, traceData, EA, Mem, memAccessFlags);
++                %(memacc_code)s;
++                printf("COMPLETE LOAD: %u\n", Mem);
++                if (stride == 0) {
++                    EA += 4;
++                } else {
++                    EA += stride;
++                }
++            }   
++        }
++
++        if (fault == NoFault) {
++            %(op_wb)s;
++        }
++
++        return fault;
++    }
++}};
++
++def template VectorStoreExecute {{
++    Fault
++    %(class_name)s::execute(ExecContext *xc,
++        Trace::InstRecord *traceData) const
++    {
++        Addr EA;
++        Fault fault = NoFault;
++
++        %(op_decl)s;
++        %(op_rd)s;
++        %(ea_code)s;
++
++        if (fault == NoFault) {
++            uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
++            uint32_t stride = 0;
++            for (int i = 0; i < csr_vl && fault == NoFault; ++i) {
++                %(memacc_code)s;
++                fault = writeMemAtomic(xc, traceData, Mem, EA, memAccessFlags,
++                    nullptr);
++                if (stride == 0) {
++                    EA += 4;
++                } else {
++                    EA += stride;
++                }
++            }
++        }
++
++        return fault;
++    }
++}};
++
++def template VectorStoreInitiateAcc {{
++    Fault
++    %(class_name)s::initiateAcc(ExecContext *xc,
++        Trace::InstRecord *traceData) const
++    {
++        Addr EA;
++        Fault fault = NoFault;
++
++        %(op_decl)s;
++        %(op_rd)s;
++        %(ea_code)s;
++
++        if (fault == NoFault) {
++            uint32_t csr_vl = xc->readMiscReg(MISCREG_VL);
++            uint32_t stride = 0;
++            for (int i = 0; i < csr_vl && fault == NoFault; ++i) {
++                %(memacc_code)s;
++                fault = writeMemTiming(xc, traceData, Mem, EA,
++                    memAccessFlags, nullptr);
++                if (stride == 0) {
++                    EA += 4;
++                } else {
++                    EA += stride;
++                }
++            }
++        }
++
++        return fault;
++    }
++}};
++
++def template VectorStoreCompleteAcc {{
++    Fault
++    %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
++        Trace::InstRecord *traceData) const
++    {
++        return NoFault;
++    }
++}};
++
++def format VVOp(code, *opt_flags) {{
++    iop = InstObjParams(name, Name, 'RegOp', code, opt_flags)
++    header_output = BasicDeclare.subst(iop)
++    decoder_output = BasicConstructor.subst(iop)
++    decode_block = BasicDecode.subst(iop)
++    exec_output = VectorExecute.subst(iop)
++}};
++
++def format VectorLoad(memacc_code, ea_code = {{EA = Rs1 + offset;}},
++        offset_code={{offset = sext<3>(VLIMM3);}},
++        mem_flags=[], inst_flags=[]) {{
++    (header_output, decoder_output, decode_block, exec_output) = \
++        LoadStoreBase(name, Name, offset_code, ea_code, memacc_code, mem_flags,
++        inst_flags, 'Load', exec_template_base='VectorLoad')
++}};
++
++def format VectorStore(memacc_code, ea_code = {{EA = Rs1 + offset;}},
++        offset_code={{offset = sext<3>(VSIMM3);}},
++        mem_flags=[], inst_flags=[]) {{
++    (header_output, decoder_output, decode_block, exec_output) = \
++        LoadStoreBase(name, Name, offset_code, ea_code, memacc_code, mem_flags,
++        inst_flags, 'Store', exec_template_base='VectorStore')
++}};
+\ No newline at end of file
+diff --git a/src/arch/riscv/isa/operands.isa b/src/arch/riscv/isa/operands.isa
+index 8dc1a3b..d290f35 100644
+--- a/src/arch/riscv/isa/operands.isa
++++ b/src/arch/riscv/isa/operands.isa
+@@ -40,7 +40,9 @@ def operand_types {{
+     'sd' : 'int64_t',
+     'ud' : 'uint64_t',
+     'sf' : 'float',
+-    'df' : 'double'
++    'df' : 'double',
++    'sv' : 'int32_t',
++    'svf': 'float'
+ }};
+ 
+ def operands {{
+@@ -71,10 +73,25 @@ def operands {{
+     'Fp2': ('FloatReg', 'df', 'FP2 + 8', 'IsFloating', 2),
+     'Fp2_bits': ('FloatReg', 'ud', 'FP2 + 8', 'IsFloating', 2),
+ 
++#Vector Operand
++    'Vd': ('VecReg', 'sv', 'VD', 'IsVector', 1),
++    'Vs1': ('VecReg', 'sv', 'VS1', 'IsVector', 2),
++    'Vs2': ('VecReg', 'sv', 'VS2', 'IsVector', 3),
++    'Vs3': ('VecReg', 'sv', 'VS3', 'IsVector', 4),
++    'Vd_f': ('VecReg', 'svf', 'VD', 'IsVector', 1),
++    'Vs1_f': ('VecReg', 'svf', 'VS1', 'IsVector', 2),
++    'Vs2_f': ('VecReg', 'svf', 'VS2', 'IsVector', 3),
++    'Vs3_f': ('VecReg', 'svf', 'VS3', 'IsVector', 4),
++    'V0': ('VecReg', 'sv', '0', 'IsVector', 5),
++
++#Vector CSRs
++    'Vl' : ('IntReg', 'ud', None, 'IsControl', 9),
++    'Vtype' : ('IntReg', 'ud', None, 'IsControl', 10),
++
+ #Memory Operand
+     'Mem': ('Mem', 'ud', None, ('IsMemRef', 'IsLoad', 'IsStore'), 5),
+ 
+ #Program Counter Operands
+     'PC': ('PCState', 'ud', 'pc', (None, None, 'IsControl'), 7),
+-    'NPC': ('PCState', 'ud', 'npc', (None, None, 'IsControl'), 8),
++    'NPC': ('PCState', 'ud', 'npc', (None, None, 'IsControl'), 8)
+ }};
+diff --git a/src/arch/riscv/registers.hh b/src/arch/riscv/registers.hh
+index bd95cf8..6571f44 100644
+--- a/src/arch/riscv/registers.hh
++++ b/src/arch/riscv/registers.hh
+@@ -69,8 +69,15 @@ typedef double FloatReg;
+ typedef uint8_t CCReg; // Not applicable to Riscv
+ typedef uint64_t MiscReg;
+ 
++/* Vector extensions */
++typedef struct { int x[8]; } IntVecReg;
++typedef struct { float x[8]; } FloatVecReg;
++
+ // dummy typedefs since we don't have vector regs
+-const unsigned NumVecElemPerVecReg = 2;
++/* Vector extensions */
++const unsigned NumVecRegs = 32;
++// const unsigned NumVecElemPerVecReg = 2;
++const unsigned NumVecElemPerVecReg = 4;
+ using VecElem = uint32_t;
+ using VecReg = ::VecRegT<VecElem, NumVecElemPerVecReg, false>;
+ using ConstVecReg = ::VecRegT<VecElem, NumVecElemPerVecReg, true>;
+@@ -81,9 +88,10 @@ const int NumMicroIntRegs = 1;
+ const int NumIntRegs = NumIntArchRegs + NumMicroIntRegs;
+ const int NumFloatRegs = 32;
+ // This has to be one to prevent warnings that are treated as errors
+-const unsigned NumVecRegs = 1;
++// const unsigned NumVecRegs = 1;
+ const int NumCCRegs = 0;
+ 
++
+ // Semantically meaningful register indices
+ const int ZeroReg = 0;
+ const int ReturnAddrReg = 1;
+@@ -100,6 +108,7 @@ const int SyscallPseudoReturnReg = 10;
+ const std::vector<int> SyscallArgumentRegs = {10, 11, 12, 13, 14, 15, 16};
+ const int SyscallNumReg = 17;
+ 
++/* For dis-assembly */
+ const std::vector<std::string> IntRegNames = {
+     "zero", "ra", "sp", "gp",
+     "tp", "t0", "t1", "t2",
+@@ -120,6 +129,16 @@ const std::vector<std::string> FloatRegNames = {
+     "fs8", "fs9", "fs10", "fs11",
+     "ft8", "ft9", "ft10", "ft11"
+ };
++const std::vector<std::string> VecRegNames = {
++    "v0",  "v1",  "v2",  "v3",
++    "v4",  "v5",  "v6",  "v7",
++    "v8",  "v9",  "v10", "v11",
++    "v12", "v13", "v14", "v15",
++    "v16", "v17", "v18", "v19",
++    "v20", "v21", "v22", "v23",
++    "v24", "v25", "v26", "v27",
++    "v28", "v29", "v30", "v31"
++};
+ 
+ enum MiscRegIndex {
+     MISCREG_PRV = 0,
+@@ -247,6 +266,10 @@ enum MiscRegIndex {
+     MISCREG_FFLAGS,
+     MISCREG_FRM,
+ 
++    /* Vector CSRs */
++    MISCREG_VL,
++    MISCREG_VTYPE,
++
+     NUM_MISCREGS
+ };
+ const int NumMiscRegs = NUM_MISCREGS;
+@@ -412,7 +435,11 @@ enum CSRIndex {
+     CSR_TDATA3 = 0x7A3,
+     CSR_DCSR = 0x7B0,
+     CSR_DPC = 0x7B1,
+-    CSR_DSCRATCH = 0x7B2
++    CSR_DSCRATCH = 0x7B2,
++
++    /* Vector CSRs */
++    CSR_VL = 0x400,
++    CSR_VTYPE = 0x400,
+ };
+ 
+ struct CSRMetadata
+@@ -580,7 +607,11 @@ const std::map<int, CSRMetadata> CSRData = {
+     {CSR_TDATA3, {"tdata3", MISCREG_TDATA3}},
+     {CSR_DCSR, {"dcsr", MISCREG_DCSR}},
+     {CSR_DPC, {"dpc", MISCREG_DPC}},
+-    {CSR_DSCRATCH, {"dscratch", MISCREG_DSCRATCH}}
++    {CSR_DSCRATCH, {"dscratch", MISCREG_DSCRATCH}},
++
++    /* Vector CSRs */
++    {CSR_VL, {"vl", MISCREG_VL}},
++    {CSR_VTYPE, {"vtype", MISCREG_VTYPE}}
+ };
+ 
+ /**
