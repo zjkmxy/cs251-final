@@ -141,7 +141,7 @@ fmuladd:
     .globl fmuladd
     # ***********************
     # brief:
-    #   W[i] += X[i] * Y[i]
+    #   W[i] = X[i] * Y[i] + Z[i]
     # input: 
     #   a0 = N
     #   a1 = addr of X
